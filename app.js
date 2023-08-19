@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 var oracledb = require('oracledb')
-const { connect } = require('./variables/database_variable')
+const connect = require('./variables/database_variable')
 app.get('/', (req, res)=>{
     res.send("HELLO")
 })

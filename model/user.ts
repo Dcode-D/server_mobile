@@ -27,4 +27,7 @@ export class User {
 
   @Column()
   password_hash: string;
+
+  @Column()
+  salt: string;
 }

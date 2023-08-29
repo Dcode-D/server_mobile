@@ -1,20 +1,29 @@
 require("reflect-metadata");
 const express = require("express");
-const app = express();
-var oracledb = require("oracledb");
-const connect = require("./variables/database_variable");
-app.get("/", (req, res) => {
-  res.send("HELLO");
-});
+  
 
 const RunApp = async () => {
-  app.use(express.json);
+  //Initialize server
+  const app = express();
+
+  app.use(express.json());
+  //#region ORM DBA
   const AppDataSource = require("./config/database").AppDataSource;
   await AppDataSource.initialize();
+  //#endregion
+
+  //#region Routes
+  app.get("/", (req, res) => {
+    res.send("HELLO");
+  });
+
+  const authRoute = require("./routes/auth/auth");
+  app.use(authRoute);
+  //#endregion
   app.listen(5000, () => {
     console.log("Listening on port 5000");
   });
-};
+}
 
 //test db
 // async function run() {

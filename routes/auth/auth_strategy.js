@@ -2,7 +2,7 @@ const passport = require('passport');
 const { UserRepository } = require('../../repository/user_repository');
 const {verifyPassword} = require('./auth_method')
 const LocalStrategy = require('passport-local');
-
+const JWTStrategy = require('passport-jwt');
 exports.localStrategy = new LocalStrategy(
     {
         usernameField: 'username',
@@ -26,6 +26,10 @@ exports.localStrategy = new LocalStrategy(
            return callback(null, false); 
         })
     }
+)
+
+exports.JWTStrategy = new JWTStrategy(
+
 )
 
 const verify = (strategy) => {

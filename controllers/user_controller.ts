@@ -1,7 +1,7 @@
 import { Response, Request, NextFunction } from "express";
 import { UserRepository } from "../repository/user_repository";
 import { hash, hashSync, verifyPassword } from "../routes/auth/auth_method";
-
+import crypto from "crypto"
 export class UserController {
   
   static async register(
@@ -23,22 +23,17 @@ export class UserController {
     //#endregion
 
     //#region Hash Password
-    const password = hashSync(request.body.password);
-    if (password.err) {
-      return response.json({
-        message: password.err.message,
-        status_code: 500,
-      });
-    }
+    const salt = crypto.randomBytes(32).toString("hex");
+    const password = hashSync(request.body.password, salt);
     //#endregion
 
     const temp = UserRepository.create({
       full_name: request.body.full_name,
-      password_hash: password.passwordHash.toString("hex"),
+      password_hash: password.toString("hex"),
       phone_number: request.body.phone_number,
       identify_ID: request.body.identify_ID,
       birthday: request.body.birthday,
-      salt: password.salt,
+      salt: salt,
     });
     const user = await UserRepository.save(temp);
 
@@ -71,14 +66,8 @@ export class UserController {
             status_code: 401,
           });
         }
-        const new_hash_password = hashSync(new_password);
-        if (new_hash_password.err) {
-          return response.json({
-            message: new_hash_password.err.message,
-            status_code: 500,
-          });
-        }
-        user.password_hash = new_hash_password.passwordHash.toString("hex");
+        const new_hash_password = hashSync(new_password, user.salt);       
+        user.password_hash = new_hash_password.toString("hex");
         await UserRepository.save(user);
         return response.json({
           message: "Password changed",

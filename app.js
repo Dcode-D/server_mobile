@@ -1,12 +1,16 @@
 require("reflect-metadata");
 const express = require("express");
-  
+const passport = require("passport");
 
 const RunApp = async () => {
   //Initialize server
   const app = express();
 
   app.use(express.json());
+  app.use(express.urlencoded({extended: false}));
+  app.use(passport.initialize({
+    session:false,
+  }));
   //#region ORM DBA
   const AppDataSource = require("./config/database").AppDataSource;
   await AppDataSource.initialize();

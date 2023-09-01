@@ -4,7 +4,7 @@ const {localStrategy, verifyLocalStrategy} = require('../auth/auth_strategy');
 const router = express.Router();;
 const { UserController } = require('../../controllers/user_controller');
 const { UserRepository } = require('../../repository/user_repository');
-
+const {encryptMiddleware, decryptMiddleware} = require("../middleware/crypto_middleware");
 passport.use('local', localStrategy);
 
 router.post('/login', verifyLocalStrategy, async (req, res) => {
@@ -18,4 +18,5 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
 
 router.post('/register', UserController.register);
 router.post('/changepassword/:phone_number?', UserController.changePassword);
+
 module.exports = router;

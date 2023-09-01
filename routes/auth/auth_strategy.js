@@ -3,6 +3,7 @@ const { UserRepository } = require('../../repository/user_repository');
 const {verifyPassword} = require('./auth_method')
 const LocalStrategy = require('passport-local');
 const JWTStrategy = require('passport-jwt');
+const jwtOptions = {}
 exports.localStrategy = new LocalStrategy(
     {
         usernameField: 'username',
@@ -28,9 +29,11 @@ exports.localStrategy = new LocalStrategy(
     }
 )
 
-exports.JWTStrategy = new JWTStrategy(
+// exports.JWTStrategy = new JWTStrategy(
+//   options, function (decoded, err) {
 
-)
+//       }
+// )
 
 const verify = (strategy) => {
     return (req, res, next) => {

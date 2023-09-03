@@ -16,11 +16,15 @@ export class User {
   @Column()
   full_name: string;
 
-  @Column()
-  phone_number: number;
+  @Column({
+    length: 10
+  })
+  phone_number: string;
 
-  @Column()
-  identify_ID: number;
+  @Column({
+    length: 12
+  })
+  identify_ID: string;
 
   @Column()
   birthday: Date;

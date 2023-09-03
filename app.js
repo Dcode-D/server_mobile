@@ -23,7 +23,9 @@ const RunApp = async () => {
   });
 
   const authRoute = require("./routes/auth/auth");
+  const apitRoute = require("./routes/api/api_routes");
   app.use(authRoute);
+  app.use(apitRoute);
   //#endregion
   app.listen(5000, () => {
     console.log("Listening on port 5000");

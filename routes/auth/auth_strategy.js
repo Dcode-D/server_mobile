@@ -2,8 +2,14 @@ const passport = require('passport');
 const { UserRepository } = require('../../repository/user_repository');
 const {verifyPassword} = require('./auth_method')
 const LocalStrategy = require('passport-local');
-const JWTStrategy = require('passport-jwt');
-const jwtOptions = {}
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+
+const jwtOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.PUBLIC_KEY,
+};
+
 exports.localStrategy = new LocalStrategy(
     {
         usernameField: 'username',
@@ -29,11 +35,17 @@ exports.localStrategy = new LocalStrategy(
     }
 )
 
-// exports.JWTStrategy = new JWTStrategy(
-//   options, function (decoded, err) {
-
-//       }
-// )
+exports.JWTStrategy = new JWTStrategy(
+  jwtOptions, async function (payload, done) {
+    const user = await UserRepository.findOne({
+      where: {phone_number: payload.phone_number}
+    })
+    if(user){
+      return done(null, user);
+    }
+    else return done(null, false);
+  }
+)
 
 const verify = (strategy) => {
     return (req, res, next) => {
@@ -45,7 +57,9 @@ const verify = (strategy) => {
             return next(err);
           }
           if (!user) {
-            next(null, false)
+            return res.json({
+              AUTHENTICATION_STATUS: false,
+            })
           }
           req.user = user;
           next();

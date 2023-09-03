@@ -10,7 +10,7 @@ export class UserController {
     next: NextFunction
   ) {
     //#region find user
-    const phone_number = Number(request.body.phone_number);
+    const phone_number = request.body.phone_number;
     const existing_user = await UserRepository.findOne({
       where: { phone_number: phone_number },
     });
@@ -49,7 +49,7 @@ export class UserController {
     response: Response,
     next: NextFunction
   ) {
-    const phone_number = Number(request.params.phone_number);
+    const phone_number = request.params.phone_number;
     const old_password = request.body.old_password;
     const new_password = request.body.new_password;
     const user = await UserRepository.findOne({

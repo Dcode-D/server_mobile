@@ -7,6 +7,8 @@ import {
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Transaction } from "./transaction";
+import { Wallet } from "./wallet";
 
 @Entity()
 export class User {
@@ -16,12 +18,12 @@ export class User {
   @Column()
   full_name: string;
 
-  @Column({
+  @PrimaryColumn({
     length: 10
   })
   phone_number: string;
 
-  @Column({
+  @PrimaryColumn({
     length: 12
   })
   identify_ID: string;
@@ -34,4 +36,10 @@ export class User {
 
   @Column()
   salt: string;
+
+  @OneToMany(() => Wallet, (wallet) => wallet.user)
+  wallets: Wallet[]
+
+  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  transactions: Transaction[]
 }

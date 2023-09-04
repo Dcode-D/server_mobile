@@ -17,7 +17,7 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
     }
     const payload = {
         sub: user.phone_number,
-        iat: Date.now(),
+        iat: Math.floor(Date.now() / 1000),
     }
     const accessToken = await generateToken(payload, process.env.SECRET_KEY)
     if(!accessToken) {
@@ -32,8 +32,6 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
 })
 
 router.post('/register', UserController.register);
-
-router.post('/changepassword/:phone_number?', UserController.changePassword);
 
 router.get('/verify', verifyJWT, (req, res) => {
     res.json({

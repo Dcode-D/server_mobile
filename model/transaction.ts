@@ -7,6 +7,7 @@ import {
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { User } from "./user";
 
 @Entity()
 export class Transaction {
@@ -32,4 +33,7 @@ export class Transaction {
 
   @Column()
   time: Date;
+
+  @ManyToOne(()=> User, (user)=> user.transactions)
+  user: User;
 }

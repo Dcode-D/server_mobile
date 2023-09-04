@@ -7,14 +7,12 @@ import {
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { User } from "./user";
 
 @Entity()
 export class Wallet {
   @PrimaryGeneratedColumn()
   id: string;
-
-  @Column()
-  user_ID: string;
 
   @Column()
   balance: number;
@@ -25,6 +23,9 @@ export class Wallet {
   @Column()
   type: string;
 
-  @Column()
+  @Column({nullable: true})
   card_number: string;
+
+  @ManyToOne(()=> User, (user) => user.wallets)
+  user: User
 }

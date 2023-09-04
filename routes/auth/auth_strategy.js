@@ -15,7 +15,7 @@ exports.localStrategy = new LocalStrategy(
         usernameField: 'username',
         passwordField: 'password',
     }, async function verify(username, password, callback){
-        const phone_number = Number(username);
+        const phone_number = username;
         const user = await UserRepository.findOne({
           where: { phone_number: phone_number },
         });
@@ -38,7 +38,7 @@ exports.localStrategy = new LocalStrategy(
 exports.JWTStrategy = new JWTStrategy(
   jwtOptions, async function (payload, done) {
     const user = await UserRepository.findOne({
-      where: {phone_number: payload.phone_number}
+      where: {id: payload.id}
     })
     if(user){
       return done(null, user);

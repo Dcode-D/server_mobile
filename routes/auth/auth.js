@@ -16,7 +16,7 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
         return res.status(401).send('Incorrect username or password');
     }
     const payload = {
-        sub: user.phone_number,
+        sub: user.id,
         iat: Math.floor(Date.now() / 1000),
     }
     const accessToken = await generateToken(payload, process.env.SECRET_KEY)

@@ -18,7 +18,7 @@ export class Transaction {
   type: string;
 
   @Column()
-  from_User: number;
+  from_User: string;
 
   @Column()
   to_User: string;
@@ -33,6 +33,9 @@ export class Transaction {
 
   @Column()
   time: Date;
+
+  @Column()
+  status: string;
 
   @ManyToOne(()=> User, (user)=> user.transactions)
   user: User;

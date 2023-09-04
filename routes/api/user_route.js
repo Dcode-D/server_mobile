@@ -6,7 +6,7 @@ router.get("/", function (req, res) {
   res.send("Welcome");
 });
 
-router.get("/:phone_number", UserController.getUser)
-router.post("/changepassword/:phone_number", UserController.changePassword);
+router.get("/:id", UserController.getUser)
+router.post("/changepassword/:id", UserController.changePassword);
 
 module.exports = router;

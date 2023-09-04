@@ -5,7 +5,7 @@ import { WalletRepository } from "../repository/wallet_repository";
 
 export class WalletController {
   static async createWallet(req: Request, res: Response, next: NextFunction) {
-    const phone_number = req.body.phone_number;
+    const id = req.body.id;
     const name = req.body.name;
     const type = req.body.type;
     var card_number = req.body.card_number;
@@ -19,7 +19,7 @@ export class WalletController {
 
     const user = await UserRepository.findOne({
       where: {
-        phone_number: phone_number,
+        id: id,
       },
     });
 
@@ -43,16 +43,17 @@ export class WalletController {
   }
 
   static async getWallets(req: Request, res: Response, next: NextFunction){
-    const phone_number = req.params.phone_number;
+    const id = req.params.id;
     const user = await UserRepository.findOne({
       where: {
-        phone_number: phone_number,
+        id: id,
       },
       relations:{
         wallets: true
       }
     });
-    return res.json(user);
+    if(!user) return res.json("Can not find user");
+    return res.json(user.wallets);
   }
 
   static async updateWallet(req: Request, res: Response, next: NextFunction){

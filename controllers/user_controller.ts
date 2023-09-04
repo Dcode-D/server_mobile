@@ -11,9 +11,9 @@ export class UserController {
   ) {
 
     //#region find user
-    const phone_number = request.body.phone_number;
+    const id = request.body.id;
     const existing_user = await UserRepository.findOne({
-      where: { phone_number: phone_number },
+      where: { id: id },
     });
     if (existing_user) {
       return response.json({
@@ -31,7 +31,7 @@ export class UserController {
     const createUser = UserRepository.create({
       full_name: request.body.full_name,
       password_hash: password.toString("hex"),
-      phone_number: request.body.phone_number,
+      id: request.body.id,
       identify_ID: request.body.identify_ID,
       birthday: request.body.birthday,
       salt: salt,
@@ -61,11 +61,11 @@ export class UserController {
     response: Response,
     next: NextFunction
   ) {
-    const phone_number = request.params.phone_number;
+    const id = request.params.id;
     const old_password = request.body.old_password;
     const new_password = request.body.new_password;
     const user = await UserRepository.findOne({
-      where: { phone_number: phone_number },
+      where: { id: id },
     });
     await verifyPassword(
       old_password,
@@ -94,9 +94,9 @@ export class UserController {
     response: Response,
     next: NextFunction
   ) {
-    const phone_number = request.params.phone_number;
+    const id = request.params.id;
     const result = await UserRepository.findOne({
-      where: {phone_number: phone_number}
+      where: {id: id}
     })
     return response.json(result);
   }

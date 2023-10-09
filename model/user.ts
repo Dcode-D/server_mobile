@@ -19,17 +19,23 @@ export class User {
   full_name: string;
 
   @PrimaryColumn({
-    length: 10
+    length: 10,
   })
   phone_number: string;
 
   @PrimaryColumn({
-    length: 12
+    length: 12,
   })
   identify_ID: string;
 
   @Column()
   birthday: Date;
+
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true })
+  job: string;
 
   @Column()
   password_hash: string;
@@ -38,8 +44,8 @@ export class User {
   salt: string;
 
   @OneToMany(() => Wallet, (wallet) => wallet.user)
-  wallets: Wallet[]
+  wallets: Wallet[];
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
-  transactions: Transaction[]
+  transactions: Transaction[];
 }

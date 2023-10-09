@@ -1,10 +1,8 @@
 module.exports={
     receive_Type: [
-        RECEIVE_MONEY,
-        DEPOSIT,
+        "DEPOSIT",
     ],
     transfer_Type: [
-        TRANSFER_MONEY,
-        WITHDRAW
+        "TRANSFER_MONEY",
     ]
 }

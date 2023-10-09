@@ -57,7 +57,7 @@ const verify = (strategy) => {
             return next(err);
           }
           if (!user) {
-            return res.json({
+            return res.status(401).json({
               AUTHENTICATION_STATUS: false,
             })
           }

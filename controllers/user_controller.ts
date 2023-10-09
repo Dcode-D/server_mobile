@@ -9,16 +9,16 @@ export class UserController {
     response: Response,
     next: NextFunction
   ) {
-
     //#region find user
     const id = request.body.id;
     const existing_user = await UserRepository.findOne({
       where: { id: id },
     });
     if (existing_user) {
-      return response.json({
+      return response.status(409).json({
         message: "User already exists",
-        status_code: 409,
+        user: {},
+        wallet: {},
       });
     }
     //#endregion
@@ -42,17 +42,16 @@ export class UserController {
       name: "DefaultWallet",
       type: "DefaultWallet",
       card_number: "",
-      user: createUser
-    })
+      user: createUser,
+    });
 
     const user = await UserRepository.save(createUser);
     const wallet = await WalletRepository.save(createDefaultWallet);
 
-    return response.json({
+    return response.status(201).json({
       message: "User created",
-      status_code: 201,
       user,
-      wallet
+      wallet,
     });
   }
 
@@ -73,17 +72,15 @@ export class UserController {
       user.password_hash,
       async (err, result) => {
         if (!result) {
-          return response.json({
+          return response.status(401).json({
             message: "Wrong password",
-            status_code: 401,
           });
         }
         const new_hash_password = hashSync(new_password, user.salt);
         user.password_hash = new_hash_password.toString("hex");
         await UserRepository.save(user);
-        return response.json({
+        return response.status(200).json({
           message: "Password changed",
-          status_code: 200,
         });
       }
     );
@@ -96,8 +93,47 @@ export class UserController {
   ) {
     const id = request.params.id;
     const result = await UserRepository.findOne({
-      where: {id: id}
-    })
-    return response.json(result);
+      where: { id: id },
+    });
+    if (!result) return response.status(404);
+    return response.status(200).json({
+      id: result.id,
+      full_name: result.full_name,
+      phone_number: result.phone_number,
+    });
+  }
+
+  static async getFullUser(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const id = request.params.id;
+    const result = await UserRepository.findOne({
+      where: { id: id },
+    });
+    if (!result) return response.status(404);
+    return response.status(200).json(result);
+  }
+
+  static async updateUser(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const id = request.params.id;
+    const city = request.body.city;
+    const job = request.body.job;
+    const user = await UserRepository.findOne({
+      where: { id: id },
+    });
+    if (!user) return response.status(404);
+
+    user.city = city;
+    user.job = job;
+
+    await UserRepository.save(user);
+
+    return response.status(200).json(user);
   }
 }

@@ -21,7 +21,7 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
     }
     const accessToken = await generateToken(payload, process.env.SECRET_KEY)
     if(!accessToken) {
-        return res.status.send('Can\'t login right now, try again later');
+        return res.status(500).send('Can\'t login right now, try again later');
     }
     const json = {
         user,
@@ -34,7 +34,7 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
 router.post('/register', UserController.register);
 
 router.get('/verify', verifyJWT, (req, res) => {
-    res.json({
+    res.status(200).json({
         msg:'Verify successful',
         AUTHENTICATION_STATUS: true,
         user: req.user,

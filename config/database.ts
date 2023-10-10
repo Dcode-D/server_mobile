@@ -15,10 +15,10 @@ export const EntitySchemas = {
 export const AppDataSource = new DataSource({
   type: "oracle",
   host: "localhost",
-  port:1521,
+  port: 1521,
   username: Database.user,
   password: Database.password,
-  serviceName:"Ewallet",
+  serviceName: "Ewallet",
   database: "Ewallet",
   synchronize: true,
   logging: true,

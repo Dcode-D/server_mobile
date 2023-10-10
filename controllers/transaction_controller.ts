@@ -18,6 +18,7 @@ export class TransactionController {
     const from = req.body.from_User;
     const to = req.body.to_User;
     const message = req.body.message;
+    const fcmToken = req.body.fcm_token;
     const time = Date.now();
 
     //#region find user's wallet
@@ -65,6 +66,9 @@ export class TransactionController {
 
     await WalletRepository.save([to_Wallet, from_Wallet]);
     await TransactionRepository.save([to_Transaction, from_Transaction]);
+
+    //PUSH NOTIFICATION
+
     return res.status(200).json({
       from_Transaction,
       from_User: {

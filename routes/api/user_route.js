@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.get("/:id", UserController.getUser);
 router.get("/get_full_user/:id", UserController.getFullUser);
-router.post("/changepassword/:id", UserController.changePassword);
+router.post("/change_password/:id", UserController.changePassword);
 
 router.put("/:id", UserController.updateUser);
 

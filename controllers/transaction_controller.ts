@@ -148,7 +148,7 @@ export class TransactionController {
   }
 
   static async getTransactions(req: Request, res: Response, next: NextFunction) {
-    const id = req.params.id;
+    const id = req.params.user_id;
     const user = await UserRepository.findOne({
       where: {
         id: id,

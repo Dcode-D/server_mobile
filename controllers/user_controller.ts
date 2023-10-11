@@ -10,9 +10,9 @@ export class UserController {
     next: NextFunction
   ) {
     //#region find user
-    const id = request.body.id;
+    const phone_number = request.body.phone_number;
     const existing_user = await UserRepository.findOne({
-      where: { id: id },
+      where: { phone_number: phone_number },
     });
     if (existing_user) {
       return response.status(409).json({
@@ -31,7 +31,7 @@ export class UserController {
     const createUser = UserRepository.create({
       full_name: request.body.full_name,
       password_hash: password.toString("hex"),
-      id: request.body.id,
+      phone_number: phone_number,
       identify_ID: request.body.identify_ID,
       birthday: request.body.birthday,
       salt: salt,

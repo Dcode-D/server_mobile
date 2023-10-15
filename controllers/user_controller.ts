@@ -62,6 +62,7 @@ export class UserController {
 
     const createOTP = new OTP();
     createOTP.otp=otp;
+    createOTP.created_at=new Date();
     createOTP.otp_data=otp_data;
 
     await OTPRepository.save(createOTP);

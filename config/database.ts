@@ -1,4 +1,5 @@
 import { DataSource, EntitySchema } from "typeorm";
+import { OTP } from "../model/otp";
 import { Promotion } from "../model/promotion";
 import { Transaction } from "../model/transaction";
 import { User } from "../model/user";
@@ -9,20 +10,18 @@ export const EntitySchemas = {
     User,
     Wallet,
     Transaction,
-    Promotion
+    Promotion,
+    OTP
 }
 
 export const AppDataSource = new DataSource({
-  type: "oracle",
-  host: "localhost",
-  port: 1521,
-  username: Database.user,
-  password: Database.password,
-  serviceName: "Ewallet",
+  type: "mysql",
+  host: "127.0.0.1",
+  port: 3306,
+  username: "root",
+  password: "NamKhanh201202",
   database: "Ewallet",
-  synchronize: true,
+  synchronize: false,
   logging: true,
-  entities: EntitySchemas,
-  subscribers: [],
-  migrations: [],
+  entities: ["dist/model/*.js"],
 });

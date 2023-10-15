@@ -3,7 +3,7 @@ const passport = require('passport');
 const {localStrategy, verifyLocalStrategy, verifyJWT, JWTStrategy} = require('../auth/auth_strategy');
 const router = express.Router();;
 const { UserController } = require('../../controllers/user_controller');
-const { UserRepository } = require('../../repository/user_repository');
+const {OTPController} = require('../../controllers/otp_controller');
 const {encryptMiddleware, decryptMiddleware} = require("../middleware/crypto_middleware");
 const { generateToken } = require('./auth_method');
 
@@ -32,6 +32,8 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
 })
 
 router.post('/register', UserController.register);
+
+router.post("/verify_otp", OTPController.verifyOTPRequest);
 
 router.get('/verify', verifyJWT, (req, res) => {
     res.status(200).json({

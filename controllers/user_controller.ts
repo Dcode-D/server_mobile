@@ -3,6 +3,9 @@ import { UserRepository } from "../repository/user_repository";
 import { hash, hashSync, verifyPassword } from "../routes/auth/auth_method";
 import crypto from "crypto";
 import { WalletRepository } from "../repository/wallet_repository";
+import { otpGenerator, sendSMS } from "../method/sms_method";
+import { OTPRepository } from "../repository/otp_repository";
+import { OTP } from "../model/otp";
 export class UserController {
   static async register(
     request: Request,
@@ -10,9 +13,9 @@ export class UserController {
     next: NextFunction
   ) {
     //#region find user
-    const id = request.body.id;
+    const phone_number = request.body.phone_number;
     const existing_user = await UserRepository.findOne({
-      where: { id: id },
+      where: { phone_number: phone_number },
     });
     if (existing_user) {
       return response.status(409).json({
@@ -28,14 +31,16 @@ export class UserController {
     const password = hashSync(request.body.password, salt);
     //#endregion
 
-    const createUser = UserRepository.create({
+    const temp_user = {
       full_name: request.body.full_name,
       password_hash: password.toString("hex"),
-      id: request.body.id,
+      phone_number: request.body.phone_number,
       identify_ID: request.body.identify_ID,
       birthday: request.body.birthday,
       salt: salt,
-    });
+    };
+
+    const createUser = UserRepository.create(temp_user);
 
     const createDefaultWallet = WalletRepository.create({
       balance: 0,
@@ -45,13 +50,30 @@ export class UserController {
       user: createUser,
     });
 
-    const user = await UserRepository.save(createUser);
-    const wallet = await WalletRepository.save(createDefaultWallet);
+    //OTP GENERATION
+    const otp = otpGenerator();
+
+    const otp_data = {
+      type:"register",
+      phone_number: phone_number,
+      user: createUser,
+      wallet: createDefaultWallet,
+    };
+
+    const createOTP = new OTP();
+    createOTP.otp=otp;
+    createOTP.otp_data=otp_data;
+
+    await OTPRepository.save(createOTP);
+
+    //SEND OTP
+    sendSMS(otp, phone_number);
+
+    console.log(createOTP);
+
 
     return response.status(201).json({
-      message: "User created",
-      user,
-      wallet,
+      message: "OTP SENT"
     });
   }
 

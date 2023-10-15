@@ -1,4 +1,5 @@
 const express = require('express');
+const { OTPController } = require('../../controllers/otp_controller');
 const { TransactionController } = require('../../controllers/transaction_controller');
 const router = express.Router();
 

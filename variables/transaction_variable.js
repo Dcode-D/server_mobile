@@ -3,6 +3,6 @@ module.exports={
         "DEPOSIT",
     ],
     transfer_Type: [
-        "TRANSFER_MONEY",
+        "WITHDRAW",
     ]
 }

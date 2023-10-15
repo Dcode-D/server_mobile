@@ -1,4 +1,5 @@
 import { DataSource, EntitySchema } from "typeorm";
+import { OTP } from "../model/otp";
 import { Promotion } from "../model/promotion";
 import { Transaction } from "../model/transaction";
 import { User } from "../model/user";
@@ -9,7 +10,8 @@ export const EntitySchemas = {
     User,
     Wallet,
     Transaction,
-    Promotion
+    Promotion,
+    OTP
 }
 
 export const AppDataSource = new DataSource({

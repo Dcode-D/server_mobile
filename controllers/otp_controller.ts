@@ -30,6 +30,7 @@ export class OTPController {
       OTPRepository.delete({otp:otp});
 
       return response.status(201).json({
+        type:"register",
         message: "User created successfully",
         user: saveUser,
         wallet: saveWallet,
@@ -49,6 +50,7 @@ export class OTPController {
       OTPRepository.delete({ otp: otp });
 
       return response.status(200).json({
+        type:"transfer_transaction",
         from_Transaction,
       });
     } else if (otp_data.type == "transaction") {
@@ -62,7 +64,11 @@ export class OTPController {
       //DETELE OTP DATA
       OTPRepository.delete({ otp: otp });
 
-      return response.status(201).json(transaction);
+      return response.status(201).json(
+        {
+          type:"transaction",
+          transaction
+      });
     } else if (otp_data.type =="change_password"){
       
     }

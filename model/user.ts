@@ -43,6 +43,12 @@ export class User {
   @Column()
   salt: string;
 
+  @Column()
+  device: string;
+
+  @Column()
+  device_token: string;
+
   @OneToMany(() => Wallet, (wallet) => wallet.user)
   wallets: Wallet[];
 

@@ -16,12 +16,14 @@ export const EntitySchemas = {
 
 export const AppDataSource = new DataSource({
   type: "mysql",
-  host: "127.0.0.1",
-  port: 3306,
-  username: "root",
-  password: "NamKhanh201202",
-  database: "ewallet2",
+  host: "/cloudsql/ewallet-server:asia-southeast1:ewalletdb",
+  extra: {
+    socketPath: "/cloudsql/ewallet-server:asia-southeast1:ewalletdb",
+  },
+  username: Database.user,
+  password: Database.password,
+  database: "Ewallet",
   synchronize: true,
-  logging: true,
-  entities: EntitySchemas,
+  logging: false,
+  entities: ["dist/model/*.js"],
 });

@@ -20,8 +20,8 @@ export const AppDataSource = new DataSource({
   port: 3306,
   username: "root",
   password: "NamKhanh201202",
-  database: "Ewallet",
-  synchronize: false,
+  database: "ewallet2",
+  synchronize: true,
   logging: true,
-  entities: ["dist/model/*.js"],
+  entities: EntitySchemas,
 });

@@ -37,11 +37,7 @@ export class UserController {
       phone_number: phone_number,
       identify_ID: request.body.identify_ID,
       birthday: request.body.birthday,
-      city:"",
-      job:"",
       salt: salt,
-      device:"",
-      device_token:"",
     };
 
     const createUser = UserRepository.create(temp_user);

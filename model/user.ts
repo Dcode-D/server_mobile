@@ -43,10 +43,10 @@ export class User {
   @Column()
   salt: string;
 
-  @Column()
+  @Column({ nullable: true })
   device: string;
 
-  @Column()
+  @Column({ nullable: true })
   device_token: string;
 
   @OneToMany(() => Wallet, (wallet) => wallet.user)

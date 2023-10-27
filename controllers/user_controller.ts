@@ -37,7 +37,11 @@ export class UserController {
       phone_number: phone_number,
       identify_ID: request.body.identify_ID,
       birthday: request.body.birthday,
+      city:"",
+      job:"",
       salt: salt,
+      device:"",
+      device_token:"",
     };
 
     const createUser = UserRepository.create(temp_user);
@@ -73,7 +77,7 @@ export class UserController {
     console.log(createOTP);
 
 
-    return response.status(201).json({
+    return response.status(200).json({
       message: "OTP SENT"
     });
   }

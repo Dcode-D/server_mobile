@@ -23,8 +23,8 @@ export class OTPController {
       const user = otp_data.user;
       const wallet = otp_data.wallet;
 
-      const saveUser = UserRepository.save(user);
-      const saveWallet = WalletRepository.save(wallet);
+      const saveUser = await UserRepository.save(user);
+      const saveWallet = await WalletRepository.save(wallet);
 
       //DETELE OTP DATA
       OTPRepository.delete({otp:otp});

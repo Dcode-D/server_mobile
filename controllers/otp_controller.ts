@@ -21,10 +21,18 @@ export class OTPController {
     const otp_data = result.otp_data;
     if (otp_data.type == "register") {
       const user = otp_data.user;
-      const wallet = otp_data.wallet;
+
+      const createDefaultWallet = WalletRepository.create({
+        balance: 0,
+        name: "DefaultWallet",
+        type: "DefaultWallet",
+        card_number: "",
+        user: user,
+      });
+
 
       const saveUser = await UserRepository.save(user);
-      const saveWallet = await WalletRepository.save(wallet);
+      const saveWallet = await WalletRepository.save(createDefaultWallet);
 
       //DETELE OTP DATA
       OTPRepository.delete({otp:otp});

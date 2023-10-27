@@ -46,14 +46,7 @@ export class UserController {
 
     const createUser = UserRepository.create(temp_user);
 
-    const createDefaultWallet = WalletRepository.create({
-      balance: 0,
-      name: "DefaultWallet",
-      type: "DefaultWallet",
-      card_number: "",
-      user: createUser,
-    });
-
+    
     //OTP GENERATION
     const otp = otpGenerator();
 
@@ -61,7 +54,6 @@ export class UserController {
       type:"register",
       phone_number: phone_number,
       user: createUser,
-      wallet: createDefaultWallet,
     };
 
     const createOTP = new OTP();
@@ -72,13 +64,14 @@ export class UserController {
     await OTPRepository.save(createOTP);
 
     //SEND OTP
-    sendSMS(otp, phone_number);
+    //sendSMS(otp, phone_number);
 
     console.log(createOTP);
 
 
     return response.status(200).json({
-      message: "OTP SENT"
+      message: "OTP SENT",
+      otp: otp
     });
   }
 

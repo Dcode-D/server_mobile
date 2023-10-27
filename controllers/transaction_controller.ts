@@ -91,10 +91,11 @@ export class TransactionController {
     await OTPRepository.save(createOTP);
 
     //SEND OTP
-    sendSMS(otp, from_User.phone_number);
+    //sendSMS(otp, from_User.phone_number);
 
     return res.status(200).json({
       message: "OTP SENT",
+      otp: otp,
     });
   }
 
@@ -180,9 +181,9 @@ export class TransactionController {
       await OTPRepository.save(createOTP);
 
       //SEND OTP
-      sendSMS(otp, from_User.phone_number);
+      //sendSMS(otp, from_User.phone_number);
 
-      return res.status(200).json({ message: "OTP SENT" });
+      return res.status(200).json({ message: "OTP SENT", otp: otp });
     }
   }
 

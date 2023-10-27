@@ -5,7 +5,7 @@ import { WalletRepository } from "../repository/wallet_repository";
 
 export class WalletController {
   static async createWallet(req: Request, res: Response, next: NextFunction) {
-    const id = req.params.id;
+    const id = req.params.user_id;
     const name = req.body.name;
     const type = req.body.type;
     var card_number = req.body.card_number;
@@ -50,7 +50,7 @@ export class WalletController {
   }
 
   static async getUserWallet(req: Request, res: Response, next: NextFunction) {
-    const id = req.params.id;
+    const id = req.params.wallet_id;
     const wallet = await WalletRepository.findOne({
       where: {
         id: id,
@@ -68,7 +68,7 @@ export class WalletController {
   }
 
   static async getWallets(req: Request, res: Response, next: NextFunction) {
-    const id = req.params.id;
+    const id = req.params.user_id;
     const user = await UserRepository.findOne({
       where: {
         id: id,

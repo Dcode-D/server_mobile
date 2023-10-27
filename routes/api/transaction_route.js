@@ -5,6 +5,6 @@ const router = express.Router();
 
 router.post('/create_transfer', TransactionController.createTransferTransaction);
 router.post('/create_transaction', TransactionController.createTransaction);
-router.get('/:id', TransactionController.getTransactions);
+router.get('/:user_id', TransactionController.getTransactions);
 
 module.exports = router;

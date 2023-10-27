@@ -6,12 +6,15 @@ const { UserController } = require('../../controllers/user_controller');
 const {OTPController} = require('../../controllers/otp_controller');
 const {encryptMiddleware, decryptMiddleware} = require("../middleware/crypto_middleware");
 const { generateToken } = require('./auth_method');
+const { UserRepository } = require('../../repository/user_repository');
 
 passport.use('local', localStrategy);
 passport.use('jwt', JWTStrategy)
 
 router.post('/login', verifyLocalStrategy, async (req, res) => {
     const user = req.user;
+    const device = req.body.device;
+    const deviceToken = req.body.deviceToken;
     if (!user) {
         return res.status(401).send('Incorrect username or password');
     }
@@ -23,6 +26,12 @@ router.post('/login', verifyLocalStrategy, async (req, res) => {
     if(!accessToken) {
         return res.status(500).send('Can\'t login right now, try again later');
     }
+
+    user.device = device;
+    user.deviceToken = deviceToken;
+
+    await UserRepository.save(user);
+
     const json = {
         user,
         AUTHENTICATION_STATUS: true,

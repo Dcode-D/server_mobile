@@ -85,15 +85,17 @@ export class TransactionController {
 
     const createOTP = new OTP();
     createOTP.otp = otp;
+    createOTP.created_at = new Date();
     createOTP.otp_data = otp_data;
 
     await OTPRepository.save(createOTP);
 
     //SEND OTP
-    sendSMS(otp, from_User.phone_number);
+    //sendSMS(otp, from_User.phone_number);
 
     return res.status(200).json({
       message: "OTP SENT",
+      otp: otp,
     });
   }
 
@@ -173,14 +175,15 @@ export class TransactionController {
 
       const createOTP = new OTP();
       createOTP.otp = otp;
+      createOTP.created_at = new Date();
       createOTP.otp_data = otp_data;
 
       await OTPRepository.save(createOTP);
 
       //SEND OTP
-      sendSMS(otp, from_User.phone_number);
+      //sendSMS(otp, from_User.phone_number);
 
-      return res.status(200).json({ message: "OTP SENT" });
+      return res.status(200).json({ message: "OTP SENT", otp: otp });
     }
   }
 
@@ -189,7 +192,7 @@ export class TransactionController {
     res: Response,
     next: NextFunction
   ) {
-    const id = req.params.id;
+    const id = req.params.user_id;
     const user = await UserRepository.findOne({
       where: {
         id: id,

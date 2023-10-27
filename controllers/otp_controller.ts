@@ -21,15 +21,24 @@ export class OTPController {
     const otp_data = result.otp_data;
     if (otp_data.type == "register") {
       const user = otp_data.user;
-      const wallet = otp_data.wallet;
 
-      const saveUser = UserRepository.save(user);
-      const saveWallet = WalletRepository.save(wallet);
+      const createDefaultWallet = WalletRepository.create({
+        balance: 0,
+        name: "DefaultWallet",
+        type: "DefaultWallet",
+        card_number: "",
+        user: user,
+      });
+
+
+      const saveUser = await UserRepository.save(user);
+      const saveWallet = await WalletRepository.save(createDefaultWallet);
 
       //DETELE OTP DATA
       OTPRepository.delete({otp:otp});
 
       return response.status(201).json({
+        type:"register",
         message: "User created successfully",
         user: saveUser,
         wallet: saveWallet,
@@ -49,6 +58,7 @@ export class OTPController {
       OTPRepository.delete({ otp: otp });
 
       return response.status(200).json({
+        type:"transfer_transaction",
         from_Transaction,
       });
     } else if (otp_data.type == "transaction") {
@@ -62,7 +72,11 @@ export class OTPController {
       //DETELE OTP DATA
       OTPRepository.delete({ otp: otp });
 
-      return response.status(201).json(transaction);
+      return response.status(201).json(
+        {
+          type:"transaction",
+          transaction
+      });
     } else if (otp_data.type =="change_password"){
       
     }

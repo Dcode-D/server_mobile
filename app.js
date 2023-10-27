@@ -27,8 +27,9 @@ const RunApp = async () => {
   app.use(authRoute);
   app.use(apitRoute);
   //#endregion
-  app.listen(5000, () => {
-    console.log("Listening on port 5000");
+  const PORT = parseInt(process.env.PORT) || 3000;
+  app.listen(PORT, () => {
+    console.log(`Listening on port ${PORT}`);
   });
 }
 

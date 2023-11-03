@@ -45,11 +45,15 @@ export class WalletController {
         id: wallet.user.id,
         full_name: wallet.user.full_name,
         phone_number: wallet.user.phone_number,
-      }
+      },
     });
   }
 
-  static async getUserWallet(req: Request, res: Response, next: NextFunction) {
+  static async getUserByWallet(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     const id = req.params.wallet_id;
     const wallet = await WalletRepository.findOne({
       where: {
@@ -61,9 +65,9 @@ export class WalletController {
     });
     if (!wallet) return res.status(400).json("Can not find wallet");
     return res.status(200).json({
-      id:wallet.user,
-      full_name:wallet.user.full_name,
-      phone_number:wallet.user.phone_number,
+      id: wallet.user.id,
+      full_name: wallet.user.full_name,
+      phone_number: wallet.user.phone_number,
     });
   }
 

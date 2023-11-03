@@ -17,7 +17,7 @@ export class TransactionController {
     res: Response,
     next: NextFunction
   ) {
-    const amount = req.body.amount;
+    const amount = Number(req.body.amount);
     const from = req.body.from_User;
     const to = req.body.to_User;
     const message = req.body.message;
@@ -47,8 +47,8 @@ export class TransactionController {
     if (!from_User || !to_User || !from_Wallet || !to_Wallet)
       return res.status(404);
 
-    to_Wallet.balance = to_Wallet.balance + amount;
-    from_Wallet.balance = from_Wallet.balance - amount;
+    to_Wallet.balance = Number(to_Wallet.balance) + amount;
+    from_Wallet.balance = Number(from_Wallet.balance) - amount;
 
     const from_Transaction = TransactionRepository.create({
       type: "TRANSFER",
@@ -58,6 +58,7 @@ export class TransactionController {
       message: message,
       time: time,
       status: "Completed",
+      user: from_User,
     });
 
     const to_Transaction = TransactionRepository.create({
@@ -68,6 +69,7 @@ export class TransactionController {
       message: message,
       time: time,
       status: "Completed",
+      user: to_User
     });
 
     //OTP GENERATION
@@ -75,7 +77,7 @@ export class TransactionController {
     const otp = otpGenerator();
 
     const otp_data = {
-      type: "transfer_transaction",
+      type: "TRANSFER_TRANSACTION",
       phone_number: from_User.phone_number,
       from_Transaction: from_Transaction,
       to_Transaction: to_Transaction,
@@ -104,7 +106,7 @@ export class TransactionController {
     res: Response,
     next: NextFunction
   ) {
-    const amount = req.body.amount;
+    const amount = Number(req.body.amount);
     const from = req.body.from_User;
     const to = req.body.to_User;
     const message = req.body.message;
@@ -115,11 +117,16 @@ export class TransactionController {
       //find user's wallet
       const to_Wallet = await WalletRepository.findOne({
         where: { id: to },
+        relations: { user: true },
+      });
+
+      const to_User = await UserRepository.findOne({
+        where: { id: to_Wallet.user.id },
       });
 
       if (!to_Wallet) return res.status(404);
 
-      to_Wallet.balance += amount;
+      to_Wallet.balance = Number(to_Wallet.balance) + amount;
 
       const transaction = TransactionRepository.create({
         type: type,
@@ -129,12 +136,31 @@ export class TransactionController {
         message: message,
         time: time,
         status: "Completed",
+        user: to_User,
       });
 
-      await WalletRepository.save(to_Wallet);
-      await TransactionRepository.save(transaction);
+      //OTP GENERATION
 
-      return res.status(200).json(transaction);
+      const otp = otpGenerator();
+
+      const otp_data = {
+        type: "TRANSACTION",
+        phone_number: to_User.phone_number,
+        wallet: to_Wallet,
+        transaction: transaction,
+      };
+
+      const createOTP = new OTP();
+      createOTP.otp = otp;
+      createOTP.created_at = new Date();
+      createOTP.otp_data = otp_data;
+
+      await OTPRepository.save(createOTP);
+
+      //SEND OTP
+      //sendSMS(otp, from_User.phone_number);
+
+      return res.status(200).json({ message: "OTP SENT", otp: otp });
     } else if (transaction_variable.transfer_Type.includes(type)) {
       //#region find user's wallet
       const from_Wallet = await WalletRepository.findOne({
@@ -144,13 +170,11 @@ export class TransactionController {
 
       if (!from_Wallet) return res.status(404);
 
-      console.log(from_Wallet);
-
       const from_User = await UserRepository.findOne({
         where: { id: from_Wallet.user.id },
       });
 
-      from_Wallet.balance -= amount;
+      from_Wallet.balance = Number(from_Wallet.balance) - amount;
 
       const transaction = TransactionRepository.create({
         type: type,
@@ -160,6 +184,7 @@ export class TransactionController {
         message: message,
         time: time,
         status: "Completed",
+        user: from_User,
       });
 
       //OTP GENERATION
@@ -167,9 +192,9 @@ export class TransactionController {
       const otp = otpGenerator();
 
       const otp_data = {
-        type: "transaction",
+        type: "TRANSACTION",
         phone_number: from_User.phone_number,
-        from_Wallet: from_Wallet,
+        wallet: from_Wallet,
         transaction: transaction,
       };
 

@@ -42,20 +42,19 @@ export class UserController {
 
     const createUser = UserRepository.create(temp_user);
 
-    
     //OTP GENERATION
     const otp = otpGenerator();
 
     const otp_data = {
-      type:"register",
+      type: "REGISTER",
       phone_number: phone_number,
       user: createUser,
     };
 
     const createOTP = new OTP();
-    createOTP.otp=otp;
-    createOTP.created_at=new Date();
-    createOTP.otp_data=otp_data;
+    createOTP.otp = otp;
+    createOTP.created_at = new Date();
+    createOTP.otp_data = otp_data;
 
     await OTPRepository.save(createOTP);
 
@@ -64,10 +63,9 @@ export class UserController {
 
     console.log(createOTP);
 
-
     return response.status(200).json({
       message: "OTP SENT",
-      otp: otp
+      otp: otp,
     });
   }
 
@@ -116,6 +114,27 @@ export class UserController {
       id: result.id,
       full_name: result.full_name,
       phone_number: result.phone_number,
+    });
+  }
+
+  static async getUserByPhoneNumber(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const phone_number = request.params.phone_number;
+    const result = await UserRepository.findOne({
+      where: { phone_number: phone_number },
+      relations: {
+        wallets: true,
+      },
+    });
+    if (!result) return response.status(404);
+    return response.status(200).json({
+      id: result.id,
+      full_name: result.full_name,
+      phone_number: result.phone_number,
+      wallets: result.wallets,
     });
   }
 

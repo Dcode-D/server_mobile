@@ -37,7 +37,7 @@ router.post("/login", verifyLocalStrategy, async (req, res) => {
   }
 
   user.device = device;
-  user.deviceToken = deviceToken;
+  user.device_token = deviceToken;
 
   await UserRepository.save(user);
 

@@ -1,31 +1,20 @@
 import admin from "../config/firebase_config.js";
 import { getMessaging } from "firebase-admin/messaging";
 
-export default async function fcmSend(notification, registrationTokens) {
+export default async function fcmSend(data, registrationTokens) {
   if (registrationTokens.length === 0) {
     console.log("Empty token");
     return;
   }
   let message = {
-    notification: notification,
-    android: {
-      notification: {
-        clickAction: "transaction",
-        sound: "default",
-      },
-    },
-    tokens: registrationTokens,
-    data: {
-      ...notification,
-      icon: "",
-    },
+    data: data,
+    token: registrationTokens,
   };
 
-  const messaging = getMessaging();
-  messaging()
+  await admin
+    .messaging()
     .send(message)
     .then((response) => {
-      // Response is a message ID string.
       console.log("Successfully sent message:", response);
     })
     .catch((error) => {

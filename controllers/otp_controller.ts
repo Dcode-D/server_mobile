@@ -4,7 +4,7 @@ import { OTPRepository } from "../repository/otp_repository";
 import { TransactionRepository } from "../repository/transaction_repository";
 import { UserRepository } from "../repository/user_repository";
 import { WalletRepository } from "../repository/wallet_repository";
-
+import fcmSend from '../controllers/notification_controller';
 export class OTPController {
   static async verifyOTPRequest(
     request: Request,
@@ -51,7 +51,27 @@ export class OTPController {
       await WalletRepository.save([to_Wallet, from_Wallet]);
       await TransactionRepository.save([to_Transaction, from_Transaction]);
 
+      const from_User = await UserRepository.findOne({
+        where: {id: from_Wallet.user.id}
+      })
+
+      const to_User = await UserRepository.findOne({
+        where: { id: to_Wallet.user.id },
+      });
+
       //PUSH NOTIFICATION
+      fcmSend(
+        {
+          title: "Ewallet",
+          body: "Bạn vừa chuyển khoản đến " + to_User.full_name,
+        },
+        from_User.device_token
+      );
+
+      fcmSend({
+        title: "Ewallet",
+        body: "Bạn vừa nhận số tiền từ " + from_User.full_name,
+      }, to_User.device_token);
 
       //DETELE OTP DATA
       OTPRepository.delete({ otp: otp });

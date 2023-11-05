@@ -4,5 +4,6 @@ module.exports={
     ],
     transfer_Type: [
         "WITHDRAW",
+        "PAYMENT",
     ]
 }

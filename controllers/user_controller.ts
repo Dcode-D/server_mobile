@@ -16,7 +16,7 @@ export class UserController {
       //#region find user
       const phone_number = request.body.phone_number;
       const existing_user = await UserRepository.findOne({
-        where: { phone_number: phone_number },
+        where: { phone_number: phone_number, active: true },
       });
       if (existing_user) {
         return response.status(409).json({
@@ -52,6 +52,8 @@ export class UserController {
       createOTP.otp = otp;
       createOTP.created_at = new Date();
       createOTP.otp_type = OtpType.REGISTER;
+      createOTP.user = createUser;
+      console.log(createOTP);
 
       await OTPRepository.save(createOTP);
       await UserRepository.save(createUser);
@@ -63,7 +65,7 @@ export class UserController {
 
       return response.status(200).json({
         message: "OTP SENT",
-        otp: otp,
+        otp: createOTP,
       });
     }
     catch(error){

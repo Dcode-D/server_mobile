@@ -21,8 +21,8 @@ export const AppDataSource = new DataSource({
     username: "root",
     password: "root",
     database: "ewallet",
-    // synchronize: true,
-    migrationsRun: true,
+    synchronize: true,
+    // migrationsRun: true,
     logging: false,
     entities: ["dist/model/*.js"],
 });

@@ -28,7 +28,7 @@ export class OTP {
   @Column({nullable:false,type: "enum", enum: OtpType})
   otp_type: OtpType
 
-  @ManyToOne(()=>User,(user)=>null)
+  @ManyToOne(()=>User,(user)=>null,{cascade:true})
   user: User;
 
   @OneToOne(()=> Transaction, (transaction)=> transaction.otp)

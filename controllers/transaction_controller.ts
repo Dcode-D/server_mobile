@@ -1,15 +1,11 @@
-import { Response, Request, NextFunction } from "express";
-import { User } from "../model/user";
-import { TransactionRepository } from "../repository/transaction_repository";
-import { UserRepository } from "../repository/user_repository";
-import { WalletRepository } from "../repository/wallet_repository";
-import { WalletController } from "./wallet_controller";
-import transaction_variable, {
-  receive_Type,
-} from "../variables/transaction_variable";
-import { otpGenerator, sendSMS } from "../method/sms_method";
-import { OTP } from "../model/otp";
-import { OTPRepository } from "../repository/otp_repository";
+import {NextFunction, Request, Response} from "express";
+import {TransactionRepository} from "../repository/transaction_repository";
+import {UserRepository} from "../repository/user_repository";
+import {WalletRepository} from "../repository/wallet_repository";
+import transaction_variable from "../variables/transaction_variable";
+import {otpGenerator} from "../method/sms_method";
+import {OTP, OtpType} from "../model/otp";
+import {OTPRepository} from "../repository/otp_repository";
 
 export class TransactionController {
   static async createTransferTransaction(
@@ -45,52 +41,36 @@ export class TransactionController {
     //#region
 
     if (!from_User || !to_User || !from_Wallet || !to_Wallet)
-      return res.status(404);
-
-    to_Wallet.balance = Number(to_Wallet.balance) + amount;
-    from_Wallet.balance = Number(from_Wallet.balance) - amount;
+      return res.status(404).json({"message":"Invalid transaction!"});
 
     const from_Transaction = TransactionRepository.create({
       type: "TRANSFER",
       from_User: from,
       to_User: to,
+      from_Wallet: from_Wallet.id,
+      to_Wallet: to_Wallet.id,
       amount: amount,
       message: message,
       time: time,
-      status: "Completed",
+      status: "Pending",
       user: from_User,
-    });
-
-    const to_Transaction = TransactionRepository.create({
-      type: "RECEIVE",
-      from_User: from,
-      to_User: to,
-      amount: amount,
-      message: message,
-      time: time,
-      status: "Completed",
-      user: to_User
     });
 
     //OTP GENERATION
 
     const otp = otpGenerator();
 
-    const otp_data = {
-      type: "TRANSFER_TRANSACTION",
-      phone_number: from_User.phone_number,
-      from_Transaction: from_Transaction,
-      to_Transaction: to_Transaction,
-      to_Wallet: to_Wallet,
-      from_Wallet: from_Wallet,
-    };
 
     const createOTP = new OTP();
     createOTP.otp = otp;
     createOTP.created_at = new Date();
-    createOTP.otp_data = otp_data;
+    createOTP.transaction = from_Transaction;
+    createOTP.otp_type = OtpType.TRANSFER_TRANSACTION;
+    createOTP.user= from_User;
+    from_Transaction.otp = createOTP;
 
     await OTPRepository.save(createOTP);
+    await TransactionRepository.save(from_Transaction);
 
     //SEND OTP
     //sendSMS(otp, from_User.phone_number);
@@ -132,10 +112,11 @@ export class TransactionController {
         type: type,
         from_User: from,
         to_User: to,
+        to_Wallet: to_Wallet.id,
         amount: amount,
         message: message,
         time: time,
-        status: "Completed",
+        status: "Pending",
         user: to_User,
       });
 
@@ -143,19 +124,17 @@ export class TransactionController {
 
       const otp = otpGenerator();
 
-      const otp_data = {
-        type: "TRANSACTION",
-        phone_number: to_User.phone_number,
-        wallet: to_Wallet,
-        transaction: transaction,
-      };
+
 
       const createOTP = new OTP();
       createOTP.otp = otp;
       createOTP.created_at = new Date();
-      createOTP.otp_data = otp_data;
+      createOTP.otp_type = OtpType.TRANSACTION;
+      createOTP.user = to_User;
+      transaction.otp= createOTP;
 
       await OTPRepository.save(createOTP);
+      await TransactionRepository.save(transaction);
 
       //SEND OTP
       //sendSMS(otp, from_User.phone_number);
@@ -180,10 +159,11 @@ export class TransactionController {
         type: type,
         from_User: from,
         to_User: to,
+        from_Wallet: from_Wallet.id,
         amount: amount,
         message: message,
         time: time,
-        status: "Completed",
+        status: "Pending",
         user: from_User,
       });
 
@@ -191,19 +171,16 @@ export class TransactionController {
 
       const otp = otpGenerator();
 
-      const otp_data = {
-        type: "TRANSACTION",
-        phone_number: from_User.phone_number,
-        wallet: from_Wallet,
-        transaction: transaction,
-      };
 
       const createOTP = new OTP();
       createOTP.otp = otp;
       createOTP.created_at = new Date();
-      createOTP.otp_data = otp_data;
+      createOTP.otp_type= OtpType.TRANSACTION;
+      createOTP.user= from_User;
+      transaction.otp = createOTP;
 
       await OTPRepository.save(createOTP);
+      await TransactionRepository.save(transaction);
 
       //SEND OTP
       //sendSMS(otp, from_User.phone_number);

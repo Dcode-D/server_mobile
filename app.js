@@ -31,6 +31,10 @@ const RunApp = async () => {
   app.use(authRoute);
   app.use(nfcRoute);
   app.use(apitRoute);
+  app.use(( req, res, next) => {
+    // Handle the error here or send an error response to the client
+    res.status(404).json({ error: 'Not found' });
+  });
   //#endregion
   const PORT = parseInt(process.env.PORT) || 3000;
   app.listen(PORT, () => {

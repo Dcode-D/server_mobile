@@ -26,7 +26,7 @@ exports.localStrategy = new LocalStrategy(
 
     if (!user) {
       return callback(null, false, {
-        message: "Incorrect phone number or password",
+        message: "Incorrect phone number",
       });
     }
     await verifyPassword(
@@ -38,7 +38,11 @@ exports.localStrategy = new LocalStrategy(
           return callback(err);
         }
         if (result) {
-          return callback(null, user);
+          return callback(null, user,
+              {
+
+                message: "Incorrect password ",
+              });
         }
         return callback(null, false);
       }

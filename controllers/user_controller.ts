@@ -1,72 +1,75 @@
-import { Response, Request, NextFunction } from "express";
-import { UserRepository } from "../repository/user_repository";
-import { hash, hashSync, verifyPassword } from "../routes/auth/auth_method";
+import {NextFunction, Request, Response} from "express";
+import {UserRepository} from "../repository/user_repository";
+import {hashSync, verifyPassword} from "../routes/auth/auth_method";
 import crypto from "crypto";
-import { WalletRepository } from "../repository/wallet_repository";
-import { otpGenerator, sendSMS } from "../method/sms_method";
-import { OTPRepository } from "../repository/otp_repository";
-import { OTP } from "../model/otp";
+import {otpGenerator} from "../method/sms_method";
+import {OTPRepository} from "../repository/otp_repository";
+import {OTP, OtpType} from "../model/otp";
+
 export class UserController {
   static async register(
     request: Request,
     response: Response,
     next: NextFunction
   ) {
-    //#region find user
-    const phone_number = request.body.phone_number;
-    const existing_user = await UserRepository.findOne({
-      where: { phone_number: phone_number },
-    });
-    if (existing_user) {
-      return response.status(409).json({
-        message: "User already exists",
-        user: {},
-        wallet: {},
+    try{
+      //#region find user
+      const phone_number = request.body.phone_number;
+      const existing_user = await UserRepository.findOne({
+        where: { phone_number: phone_number },
+      });
+      if (existing_user) {
+        return response.status(409).json({
+          message: "User already exists",
+          user: {},
+          wallet: {},
+        });
+      }
+      //#endregion
+
+      //#region Hash Password
+      const salt = crypto.randomBytes(32).toString("hex");
+      const password = hashSync(request.body.password, salt);
+      //#endregion
+
+      const temp_user = {
+        full_name: request.body.full_name,
+        password_hash: password.toString("hex"),
+        phone_number: phone_number,
+        identify_ID: request.body.identify_ID,
+        birthday: request.body.birthday,
+        salt: salt,
+      };
+
+      const createUser = UserRepository.create(temp_user);
+
+      //OTP GENERATION
+      const otp = otpGenerator();
+
+
+
+      const createOTP = new OTP();
+      createOTP.otp = otp;
+      createOTP.created_at = new Date();
+      createOTP.otp_type = OtpType.REGISTER;
+
+      await OTPRepository.save(createOTP);
+      await UserRepository.save(createUser);
+
+      //SEND OTP
+      //sendSMS(otp, phone_number);
+
+      console.log(createOTP);
+
+      return response.status(200).json({
+        message: "OTP SENT",
+        otp: otp,
       });
     }
-    //#endregion
+    catch(error){
+      next(error);
+    }
 
-    //#region Hash Password
-    const salt = crypto.randomBytes(32).toString("hex");
-    const password = hashSync(request.body.password, salt);
-    //#endregion
-
-    const temp_user = {
-      full_name: request.body.full_name,
-      password_hash: password.toString("hex"),
-      phone_number: phone_number,
-      identify_ID: request.body.identify_ID,
-      birthday: request.body.birthday,
-      salt: salt,
-    };
-
-    const createUser = UserRepository.create(temp_user);
-
-    //OTP GENERATION
-    const otp = otpGenerator();
-
-    const otp_data = {
-      type: "REGISTER",
-      phone_number: phone_number,
-      user: createUser,
-    };
-
-    const createOTP = new OTP();
-    createOTP.otp = otp;
-    createOTP.created_at = new Date();
-    createOTP.otp_data = otp_data;
-
-    await OTPRepository.save(createOTP);
-
-    //SEND OTP
-    //sendSMS(otp, phone_number);
-
-    console.log(createOTP);
-
-    return response.status(200).json({
-      message: "OTP SENT",
-      otp: otp,
-    });
   }
 
   static async changePassword(

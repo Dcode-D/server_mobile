@@ -7,15 +7,9 @@ const client = require("twilio")(accountSid, authToken);
 exports.verifyOTP = async (otpCode, phone_number) => {
     const result = await OTPRepository.findOne({
         where: { otp: otpCode },
+        relations:{user:true, transaction: true}
     })
-    if(!result) return null;
-    const otp_data = result.otp_data;
-    if (phone_number == otp_data.phone_number) {
-      return {
-        otp_data: otp_data,
-      };
-    }
-    return null;
+    return result ? result : null;
 }
 
 

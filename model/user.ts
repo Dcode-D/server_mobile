@@ -31,6 +31,9 @@ export class User {
   @Column()
   birthday: Date;
 
+  @Column({nullable:false, default: false})
+  active: boolean;
+
   @Column({ nullable: true })
   city: string;
 
@@ -49,7 +52,7 @@ export class User {
   @Column({ nullable: true })
   device_token: string;
 
-  @OneToMany(() => Wallet, (wallet) => wallet.user)
+  @OneToMany(() => Wallet, (wallet) => wallet.user,{ cascade: true })
   wallets: Wallet[];
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)

@@ -50,15 +50,22 @@ export class OTPController {
         };
         const accessToken = await generateToken(payload, process.env.SECRET_KEY);
 
+        if(!accessToken){
+          return response.status(500).json("There was an error, please try again");
+        }
+
         return response.status(201).json({
           type: "REGISTER",
           message: "User created successfully",
+          accessToken,
           user: {
             id: saveUser.id,
             full_name: saveUser.full_name,
             phone_number: saveUser.phone_number,
-          },
-          accessToken
+            identify_ID: saveUser.identify_ID,
+            devicetoken: saveUser.device_token,
+            wallets: saveUser.wallets,
+          },         
         });
       } else if (result.otp_type == OtpType.TRANSFER_TRANSACTION) {
         const from_Transaction = await TransactionRepository.findOne({

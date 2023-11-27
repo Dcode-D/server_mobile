@@ -77,7 +77,7 @@ export class TransactionController {
 
     return res.status(200).json({
       message: "OTP SENT",
-      otp: otp,
+      otp_data: otp,
     });
   }
 
@@ -185,7 +185,7 @@ export class TransactionController {
       //SEND OTP
       //sendSMS(otp, from_User.phone_number);
 
-      return res.status(200).json({ message: "OTP SENT", otp: otp });
+      return res.status(200).json({ message: "OTP SENT", otp_data: otp });
     }
   }
 

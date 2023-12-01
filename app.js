@@ -3,6 +3,7 @@ require("dotenv").config();
 const admin = require("firebase-admin");
 const express = require("express");
 const passport = require("passport");
+const vnpRoute = require("./routes/vnp");
 
 const RunApp = async () => {
   //Initialize server
@@ -21,15 +22,17 @@ const RunApp = async () => {
   //#endregion
 
   //#region Routes
-  app.post("/", (req, res) => {
+  app.get("/", (req, res) => {
     res.send("HELLO");
   });
 
   const authRoute = require("./routes/auth/auth");
   const apitRoute = require("./routes/api/api_routes");
   const nfcRoute = require("./routes/api/nfc_routes");
+  const vnpRoute = require("./routes/vnp");
   app.use(authRoute);
   app.use(nfcRoute);
+  app.use(vnpRoute);
   app.use(apitRoute);
   app.use(( req, res, next) => {
     // Handle the error here or send an error response to the client

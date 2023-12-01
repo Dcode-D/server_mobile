@@ -23,6 +23,6 @@ export const AppDataSource = new DataSource({
     database: "ewallet",
     synchronize: true,
     // migrationsRun: true,
-    logging: false,
+    logging: true,
     entities: ["dist/model/*.js"],
 });

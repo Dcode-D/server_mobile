@@ -6,6 +6,7 @@ import { UserRepository } from "../repository/user_repository";
 import { WalletRepository } from "../repository/wallet_repository";
 import fcmSend from '../controllers/notification_controller';
 import {OtpType} from "../model/otp";
+import { generateToken } from "../routes/auth/auth_method";
 export class OTPController {
   static async verifyOTPRequest(
     request: Request,
@@ -43,10 +44,28 @@ export class OTPController {
         //DETELE OTP DATA
         // OTPRepository.delete({ otp: otp });
 
+        const payload = {
+          sub: saveUser.id,
+          iat: Math.floor(Date.now() / 1000),
+        };
+        const accessToken = await generateToken(payload, process.env.SECRET_KEY);
+
+        if(!accessToken){
+          return response.status(500).json("There was an error, please try again");
+        }
+
         return response.status(201).json({
           type: "REGISTER",
           message: "User created successfully",
-          user: saveUser,
+          accessToken,
+          user: {
+            id: saveUser.id,
+            full_name: saveUser.full_name,
+            phone_number: saveUser.phone_number,
+            identify_ID: saveUser.identify_ID,
+            devicetoken: saveUser.device_token,
+            wallets: saveUser.wallets,
+          },         
         });
       } else if (result.otp_type == OtpType.TRANSFER_TRANSACTION) {
         const from_Transaction = await TransactionRepository.findOne({

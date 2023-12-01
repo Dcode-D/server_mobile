@@ -39,6 +39,7 @@ export class UserController {
         identify_ID: request.body.identify_ID,
         birthday: request.body.birthday,
         salt: salt,
+        device_token: request.body.deviceToken
       };
 
       const createUser = UserRepository.create(temp_user);
@@ -53,7 +54,6 @@ export class UserController {
       createOTP.created_at = new Date();
       createOTP.otp_type = OtpType.REGISTER;
       createOTP.user = createUser;
-      console.log(createOTP);
 
       await OTPRepository.save(createOTP);
       await UserRepository.save(createUser);
@@ -61,11 +61,13 @@ export class UserController {
       //SEND OTP
       //sendSMS(otp, phone_number);
 
-      console.log(createOTP);
-
       return response.status(200).json({
         message: "OTP SENT",
-        otp: createOTP,
+        otp_data: {
+          otp: createOTP.otp,
+          otp_type: createOTP.otp_type,
+          created_at: createOTP.created_at
+        },
       });
     }
     catch(error){

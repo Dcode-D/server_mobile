@@ -30,6 +30,11 @@ const RunApp = async () => {
   const apitRoute = require("./routes/api/api_routes");
   const nfcRoute = require("./routes/api/nfc_routes");
   const vnpRoute = require("./routes/vnp");
+  app.get('/test_sms', (req, res) => {
+    const {sendSMS} = require('./method/sms_method');
+    sendSMS('123456','0919386768');
+    res.status(200).json({message: 'ok'});
+  })
   app.use(authRoute);
   app.use(nfcRoute);
   app.use(vnpRoute);

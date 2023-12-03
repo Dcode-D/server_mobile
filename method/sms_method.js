@@ -28,7 +28,7 @@ exports.sendSMS = (otpCode, phone_number) =>{
     client.messages
       .create({
         body: "Đây là mã OTP: " + otpCode,
-        from: "+19036183400",
+        from: "+18179694239▲",
         to: "+84" + phone_number,
       })
       .then((message) => console.log(message.sid))

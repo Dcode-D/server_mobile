@@ -19,7 +19,7 @@ export const AppDataSource = new DataSource({
     host: "localhost",
     port: 3306,
     username: "root",
-    password: "NamKhanh201202",
+    password: "root",
     database: "ewallet",
     synchronize: true,
     // migrationsRun: true,

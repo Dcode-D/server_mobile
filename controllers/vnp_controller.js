@@ -9,6 +9,7 @@ const moment = require('moment');
 const {WalletRepository} = require("../repository/wallet_repository");
 const {UserRepository} = require("../repository/user_repository");
 const {TransactionRepository} = require("../repository/transaction_repository");
+const {TokenRepository} = require("../repository/token_repository");
 import {AppDataSource} from "../config/database";
 
 //{ var amount = req.body.amount;
@@ -164,16 +165,15 @@ function sortObject(obj) {
         return sorted;
 }
 //must run a ngrok server on port of this app first to get the ngrok url, the ngrok subdomain then must be updated in .env file
-function formatNgrokUrl() {
+function formatNgrokUrl(returnoffset) {
         const ngrokSubdomain = process.env.NGROK_SUBDOMAIN || 'randomstring';
-        const ngrokBaseUrl = `http://${ngrokSubdomain}.ngrok-free.app/vnp_return`;
+        const ngrokBaseUrl = `http://${ngrokSubdomain}.ngrok-free.app//${returnoffset}`;
 
         return ngrokBaseUrl;
 
 }
 
 const test_create_vnpay = async function (req, res, next) {
-
         try {
                 process.env.TZ = 'Asia/Ho_Chi_Minh';
                 let amount = req.body.amount;
@@ -224,7 +224,7 @@ const test_create_vnpay = async function (req, res, next) {
                 let tmnCode = vnpVariables.vnp_TmnCode;
                 let secretKey = vnpVariables.vnp_HashSecret;
                 let vnpUrl = vnpVariables.vnp_Url;
-                let returnUrl = formatNgrokUrl();
+                let returnUrl = formatNgrokUrl("vnp_return");
                 let orderId = savedTransaction.id;
 
                 let vnp_Params = {};
@@ -259,9 +259,124 @@ const test_create_vnpay = async function (req, res, next) {
         catch (e) {
                 res.status(500).json({error: e.message});
         }
-
 }
 
+const vnp_create_token = async function (req, res, next) {
+        try {
+                process.env.TZ = 'Asia/Ho_Chi_Minh';
+                const userId = req.user.id;
+                if(!userId) return res.status(401).json({message: 'Unauthorized'});
+                const bankCode = req.body.bankCode;
+                const cardType = req.body.cardType;
+                const message = req.body.message;
+
+                let locale = req.body.language;
+                if (locale === null || locale === ''|| locale === undefined) {
+                        locale = 'vn';
+                }
 
 
-module.exports = {vnp_controller_transfer,vnp_controller_return, test_create_vnpay}
+                let date = new Date();
+                let createDate = moment(date).format('YYYYMMDDHHmmss');
+
+                let ipAddr = req.headers['x-forwarded-for'] ||
+                    req.connection.remoteAddress ||
+                    req.socket.remoteAddress ||
+                    req.connection.socket.remoteAddress;
+
+                let tmnCode = vnpVariables.vnp_TmnCode;
+                let secretKey = vnpVariables.vnp_HashSecret;
+                let vnpUrl = vnpVariables.vnp_TokenUrl;
+                let returnUrl = formatNgrokUrl('vnp_create_token_return');
+                let returnUrlCancel = formatNgrokUrl('vnp_create_token_return_cancel');
+                const systemToken = TokenRepository.create({
+                        user: req.user,
+                });
+                await TokenRepository.save(systemToken);
+                const orderId = systemToken.id;
+
+                let vnp_Params = {};
+                vnp_Params['vnp_version'] = '2.1.0';
+                vnp_Params['vnp_command'] = 'token_create';
+                vnp_Params['vnp_tmn_code'] = tmnCode;
+                vnp_Params['vnp_app_user_id'] = userId;
+                vnp_Params['vnp_locale'] = locale;
+                vnp_Params['vnp_card_type'] = cardType;
+                vnp_Params['vnp_return_url'] = returnUrl;
+                vnp_Params['vnp_cancel_url'] = returnUrlCancel;
+                vnp_Params['vnp_create_date'] = createDate;
+                vnp_Params['vnp_ip_addr'] = ipAddr;
+                vnp_Params['vnp_txn_desc'] = message;
+                vnp_Params['vnp_txn_ref'] = orderId;
+                if(bankCode !== null && bankCode !== '' && bankCode !== undefined){
+                        vnp_Params['vnp_bank_code'] = bankCode;
+                }
+                vnp_Params = sortObject(vnp_Params);
+                let querystring = require('qs');
+                let signData = querystring.stringify(vnp_Params, {encode: false});
+                let crypto = require("crypto");
+                let hmac = crypto.createHmac("sha512", secretKey);
+                let signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");
+                vnp_Params['vnp_secure_hash'] = signed;
+                vnpUrl += '?' + querystring.stringify(vnp_Params, {encode: false});
+                return res.status(200).json({code: '00', data: vnpUrl});
+        }catch (e) {
+                res.status(500).json({error: e.message});
+        }
+}
+
+const vnp_create_token_return = async function (req, res, next) {
+        try {
+                let vnp_Params = req.query;
+                let secureHash = vnp_Params['vnp_secure_hash'];
+
+                delete vnp_Params['vnp_secure_hash'];
+
+                vnp_Params = sortObject(vnp_Params);
+                var secretKey = vnpVariables.vnp_HashSecret;
+
+                var signData = querystring.stringify(vnp_Params, {encode: false});
+                var hmac = crypto.createHmac("sha512", secretKey);
+                var signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");
+                console.log(vnp_Params)
+
+                if (secureHash === signed) {
+                        var orderId = vnp_Params['vnp_tnx_ref'];
+                        var rspCode = vnp_Params['vnp_response_code'];
+                        if(rspCode === '00'){
+                                //TODO: redirect client to success page
+                                        const token = await TokenRepository.findOne({where: {id: orderId}});
+                                        if(token){
+                                                let tokenStr = vnp_Params['vnp_token'];
+                                                token.token = tokenStr;
+                                                await TokenRepository.save(token);
+                                        }
+                                        else {
+                                                res.status(500).json({'message': 'Invalid token'})
+                                        }
+                                }
+                        else {
+                                res.status(500).json({'message': 'Error from vnpay'})
+                        }
+
+                        }
+                else {
+                        res.status(500).json({'message': 'Fail checksum from vnpay'})
+                }
+        }
+        catch (e) {
+                res.status(403).json({RspCode: '99', Message: 'Fail transaction'})
+        }
+}
+
+const vnp_create_token_cancel = async function (req, res, next) {
+        try{
+                res.status(200).json({code: '00', data: 'cancel'});
+        }
+        catch (e) {
+               res.status(500).json({error: e.message});
+        }
+}
+
+module.exports = {vnp_controller_transfer,vnp_controller_return, test_create_vnpay,
+        vnp_create_token, vnp_create_token_cancel, vnp_create_token_return};

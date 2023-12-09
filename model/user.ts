@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { Transaction } from "./transaction";
 import { Wallet } from "./wallet";
+import {Token} from "./token";
 
 @Entity()
 export class User {
@@ -57,4 +58,6 @@ export class User {
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];
+  @OneToMany(()=> Token, (token)=> token.user, {cascade: true})
+    tokens: Token[];
 }

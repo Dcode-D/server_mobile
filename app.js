@@ -30,6 +30,7 @@ const RunApp = async () => {
   const apitRoute = require("./routes/api/api_routes");
   const nfcRoute = require("./routes/api/nfc_routes");
   const vnpRoute = require("./routes/vnp");
+  const paypalRoute = require("./routes/paypal");
   app.get('/test_sms', (req, res) => {
     const {sendSMS} = require('./method/sms_method');
     sendSMS('123456','0919386768');
@@ -38,6 +39,7 @@ const RunApp = async () => {
   app.use(authRoute);
   app.use(nfcRoute);
   app.use(vnpRoute);
+  app.use(paypalRoute);
   app.use(apitRoute);
   app.use(( req, res, next) => {
     // Handle the error here or send an error response to the client

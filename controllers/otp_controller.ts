@@ -95,7 +95,7 @@ export class OTPController {
         if (from_Wallet.balance < 0) {
           return response.status(404).json("Not enough money");
         }
-        from_Transaction.status = "COMPLETED";
+        from_Transaction.status = "Success";
         await WalletRepository.save(from_Wallet);
         await WalletRepository.save(to_Wallet);
         await TransactionRepository.save(from_Transaction);

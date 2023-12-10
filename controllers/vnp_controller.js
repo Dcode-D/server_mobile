@@ -11,6 +11,7 @@ const {UserRepository} = require("../repository/user_repository");
 const {TransactionRepository} = require("../repository/transaction_repository");
 const {TokenRepository} = require("../repository/token_repository");
 import {AppDataSource} from "../config/database";
+import {formatNgrokUrl} from "../utils/NgrokFormat";
 
 //{ var amount = req.body.amount;
 // var bankCode = req.body.bankCode;
@@ -102,35 +103,45 @@ const vnp_controller_return = async function (req, res, next) {
                                         where: {id: orderId}
                                 });
 
-                                if(transaction){
+                                if(transaction) {
+                                        const wallet = await WalletRepository.findOne({
+                                                where: {id: transaction.to_Wallet}
+                                        })
+                                        if(!wallet) return res.status(404).json({'message': 'Wallet not found'});
                                         //here we must use transaction to update database to ensure data consistency
                                         //create query runner to execute transaction
                                         const queryRunner = AppDataSource.createQueryRunner();
                                         await queryRunner.connect();
                                         // lets now open a new transaction:
                                         await queryRunner.startTransaction();
-                                        try {
-                                                //update user's wallet and transaction
-                                                transaction.status = 'SUCCESS';
-                                                const wallet = await queryRunner.manager.find(Wallet, {
-                                                        where: {id: transaction.to_Wallet}
-                                                });
-                                                wallet.balance = wallet.balance + transaction.amount;
-                                                await queryRunner.manager.save(wallet);
-                                                await queryRunner.manager.save(transaction);
-                                                // commit transaction now:
-                                                await queryRunner.commitTransaction()
+                                        if (transaction.status === 'Pending') {
+                                                try {
+                                                        //update user's wallet and transaction
+                                                        transaction.status = 'Success';
+                                                        wallet.balance = wallet.balance + transaction.amount;
+                                                        await queryRunner.manager.save(wallet);
+                                                        await queryRunner.manager.save(transaction);
+                                                        // commit transaction now:
+                                                        await queryRunner.commitTransaction()
 
-                                        }catch (e) {
-                                                // since we have errors lets rollback changes we made
-                                                await queryRunner.rollbackTransaction();
-                                                return res.status(501).json({'message': 'Fail transaction'})
+                                                } catch (e) {
+                                                        // since we have errors lets rollback changes we made
+                                                        await queryRunner.rollbackTransaction();
+                                                        return res.status(501).json({'message': 'Fail transaction'})
+                                                } finally {
+                                                        // you need to release query runner which is manually created:
+                                                        await queryRunner.release();
+                                                }
+
+                                                res.status(200).json({
+                                                        RspCode: '00',
+                                                        Message: 'success',
+                                                        wallets: wallet
+                                                });
                                         }
-                                        finally {
-                                                // you need to release query runner which is manually created:
-                                                await queryRunner.release();
+                                        else {
+                                                res.status(404).json({'message': 'Transaction not valid'})
                                         }
-                                        res.status(200).json({RspCode: '00', Message: 'success', 'transaction': transaction});
                                 }
                                 else {
                                         res.status(404).json({'message': 'Transaction not found'})
@@ -165,13 +176,7 @@ function sortObject(obj) {
         return sorted;
 }
 //must run a ngrok server on port of this app first to get the ngrok url, the ngrok subdomain then must be updated in .env file
-function formatNgrokUrl(returnoffset) {
-        const ngrokSubdomain = process.env.NGROK_SUBDOMAIN || 'randomstring';
-        const ngrokBaseUrl = `http://${ngrokSubdomain}.ngrok-free.app//${returnoffset}`;
 
-        return ngrokBaseUrl;
-
-}
 
 const test_create_vnpay = async function (req, res, next) {
         try {

@@ -122,49 +122,36 @@ export class OTPController {
           from_Transaction,
         });
       } else if (result.otp_type == OtpType.TRANSACTION) {
-        const wallet = result.transaction.to_Wallet ? otp.to_Wallet : otp.from_Wallet;
-        const transaction = result.transaction;
-        //if the transaction is received, add money to bank account
-        if (transaction.to_Wallet) {
-          // has receiver
-          const to_Wallet = await WalletRepository.findOne({
-            where: {id: transaction.to_Wallet},
-          })
-          to_Wallet.balance = Number(to_Wallet.balance) + transaction.amount;
-          await WalletRepository.save(to_Wallet);
-        }
-        //else if the transaction is deposit, subtract money from bank account
-        else if (transaction.from_Wallet) {
-          // has sender
-          const from_Wallet = await WalletRepository.findOne({
-            where: {id: transaction.from_Wallet},
-          })
-          //check if the account has that much money
-          from_Wallet.balance = Number(from_Wallet.balance) - transaction.amount;
-          if (from_Wallet.balance < 0) {
-            return response.status(404).json("Not enough money");
-          }
-          await WalletRepository.save(from_Wallet);
-        }
-        await WalletRepository.save(wallet);
-        transaction.status = "COMPLETED";
-        await TransactionRepository.save(transaction);
+        // const wallet = result.transaction.to_Wallet ? result.transaction.to_Wallet : result.transaction.from_Wallet;
+        // const transaction = result.transaction;
+        // if(!transaction) return response.status(404).json("Invalid transaction !");
+        // if(!wallet) return response.status(404).json("Invalid wallet !");
+        // const withWallet = await WalletRepository.findOne({where: {id: wallet}});
+        // if(withWallet.balance < transaction.amount) return response.status(404).json("Not enough money !");
+        //
+        // const payResult = paypalPayout(transaction);
+        // return response.status(200).json(payResult);
+        // if(!payResult) return response.status(404).json("Paypal payout error !");
+        // else{
+        //   transaction.status = "Success";
+        //   await TransactionRepository.save(transaction);
+        //   withWallet.balance = withWallet.balance - transaction.amount;
+        //   await WalletRepository.save(withWallet);
+        //   //DETELE OTP DATA
+        //   // OTPRepository.delete({ otp: otp });
+        //   return response.status(200).json({
+        //     type: "TRANSACTION",
+        //     transaction,
+        //     payResult
+        //   });
+        // }
 
-        //PUSH NOTIFICATION
-
-        //DETELE OTP DATA
-        // OTPRepository.delete({ otp: otp });
-
-        return response.status(200).json({
-          type: "TRANSACTION",
-          transaction,
-        });
       } else if (otp.type == OtpType.CHANGE_PASSWORD) {
       } else {
         return response.status(404).json({message: "OTP is not valid type!", otp: result});
       }
     } catch (error) {
-      return response.status(404).json(error);
+      return response.status(404).json(error.message);
     }
   }
 }

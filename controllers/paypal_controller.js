@@ -4,6 +4,8 @@ import {TransactionRepository} from "../repository/transaction_repository";
 import {AppDataSource} from "../config/database";
 import {Wallet} from "../model/wallet";
 import {Transaction} from "../model/transaction";
+import {verifyOTP} from "../method/sms_method";
+import {OtpType} from "../model/otp";
 
 const paypalSdk = require('paypal-rest-sdk');
 const paypalVariable = require('../variables/paypal_variable');
@@ -93,6 +95,7 @@ const paypalDeposit = async (req, res) => {
                         return res.status(200).json({url: payment.links[i].href});
                     }
                 }
+                return res.status(501).json({ error: 'No redirect URL found' });
             }
         });
     } catch (error) {
@@ -166,5 +169,80 @@ const paypalCancel = async (req, res) => {
     res.send('Cancelled');
 }
 
-module.exports = { paypalDeposit, paypalSuccess, paypalCancel };
+const paypalPayout = async (req, res) => {
+    try {
+
+        const otp = req.body.otp;
+        const phone_number = req.body.phone_number;
+        const email = req.body.email;
+
+        const result = await verifyOTP(otp, phone_number);
+        if (!result) {
+            return res.status(404).json("OTP is not valid!");
+        }
+        if (result.otp_type == OtpType.TRANSACTION) {
+            const wallet = result.transaction.to_Wallet ? result.transaction.to_Wallet : result.transaction.from_Wallet;
+            const transaction = result.transaction;
+            if (!transaction||transaction.status!=='Pending') return res.status(404).json("Invalid transaction !");
+            if (!wallet) return res.status(404).json("Invalid wallet !");
+            const withWallet = await WalletRepository.findOne({where: {id: wallet}});
+            if (withWallet.balance < transaction.amount) return response.status(404).json("Not enough money !");
+            const rate = 24000;
+            const usdamt = (Math.round(transaction.amount / rate * 100) / 100).toFixed(2);
+            var sender_batch_id = Math.random().toString(36).substring(9);
+            var create_payout_json = {
+                "sender_batch_header": {
+                    "sender_batch_id": sender_batch_id,
+                    "email_subject": "You have a payment"
+                },
+                "items": [
+                    {
+                        "recipient_type": "EMAIL",
+                        "amount": {
+                            "value": usdamt,
+                            "currency": "USD"
+                        },
+                        "receiver": email,
+                        "note": transaction.message,
+                        "sender_item_id": "item_3"
+                    }
+                ]
+            };
+            paypalSdk.payout.create(create_payout_json, 'false', async function (error, payout) {
+                if (error) {
+                    return res.status(404).json(error);
+                } else {
+                    const queryRunner = AppDataSource.createQueryRunner();
+                    await queryRunner.connect();
+                    // lets now open a new transaction:
+                    await queryRunner.startTransaction();
+                    //handle transaction on wallets
+                    try {
+                        withWallet.balance = withWallet.balance - transaction.amount;
+                        transaction.status = 'Success';
+                        await queryRunner.manager.save(withWallet);
+                        await queryRunner.manager.save(transaction);
+                        await queryRunner.commitTransaction();
+                        return res.status(200).json({message: 'Success',wallet: withWallet, payout: payout});
+                    }catch (e) {
+                        await queryRunner.rollbackTransaction();
+                        return res.status(501).json({'message': 'Fail transaction'})
+                    }
+                    finally {
+                        await queryRunner.release();
+                    }
+                    return res.status(500).message('Fail transaction');
+                }
+            });
+        } else {
+            return res.status(404).json("OTP is not valid!");
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error });
+    }
+
+}
+
+module.exports = { paypalDeposit, paypalSuccess, paypalCancel, paypalPayout };
 

@@ -212,26 +212,33 @@ const paypalPayout = async (req, res) => {
                 if (error) {
                     return res.status(404).json(error);
                 } else {
-                    const queryRunner = AppDataSource.createQueryRunner();
-                    await queryRunner.connect();
-                    // lets now open a new transaction:
-                    await queryRunner.startTransaction();
-                    //handle transaction on wallets
-                    try {
-                        withWallet.balance = withWallet.balance - transaction.amount;
-                        transaction.status = 'Success';
-                        await queryRunner.manager.save(withWallet);
-                        await queryRunner.manager.save(transaction);
-                        await queryRunner.commitTransaction();
-                        return res.status(200).json({message: 'Success',wallet: withWallet, payout: payout});
-                    }catch (e) {
-                        await queryRunner.rollbackTransaction();
-                        return res.status(501).json({'message': 'Fail transaction'})
-                    }
-                    finally {
-                        await queryRunner.release();
-                    }
-                    return res.status(500).message('Fail transaction');
+                    if(payout.httpStatusCode!==201) return res.status(404).json("Fail transaction");
+                    paypalSdk.payout.get(payout.batch_header.payout_batch_id, async function (error, payout) {
+                       if(error){
+                            return res.status(404).json(error);
+                       }
+                       else {
+                           const queryRunner = AppDataSource.createQueryRunner();
+                           await queryRunner.connect();
+                           // lets now open a new transaction:
+                           await queryRunner.startTransaction();
+                           //handle transaction on wallets
+                           try {
+                               withWallet.balance = withWallet.balance - transaction.amount;
+                               transaction.status = 'Success';
+                               await queryRunner.manager.save(withWallet);
+                               await queryRunner.manager.save(transaction);
+                               await queryRunner.commitTransaction();
+                               return res.status(200).json({message: 'Success',wallet: withWallet, payout: payout});
+                           }catch (e) {
+                               await queryRunner.rollbackTransaction();
+                               return res.status(501).json({'message': 'Fail transaction'})
+                           }
+                           finally {
+                               await queryRunner.release();
+                           }
+                       }
+                    });
                 }
             });
         } else {

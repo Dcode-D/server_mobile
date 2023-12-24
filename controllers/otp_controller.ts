@@ -7,6 +7,9 @@ import { WalletRepository } from "../repository/wallet_repository";
 import fcmSend from '../controllers/notification_controller';
 import {OtpType} from "../model/otp";
 import { generateToken } from "../routes/auth/auth_method";
+import {AppDataSource} from "../config/database";
+import {Wallet} from "../model/wallet";
+import {Transaction} from "../model/transaction";
 export class OTPController {
   static async verifyOTPRequest(
     request: Request,
@@ -96,9 +99,37 @@ export class OTPController {
           return response.status(404).json("Not enough money");
         }
         from_Transaction.status = "Success";
-        await WalletRepository.save(from_Wallet);
-        await WalletRepository.save(to_Wallet);
-        await TransactionRepository.save(from_Transaction);
+        const to_Transaction = TransactionRepository.create({
+          type: OtpType.TRANSFER_TRANSACTION,
+          from_User: from_User.id,
+          to_User: to_User.id,
+          from_Wallet: from_Wallet.id,
+          to_Wallet: to_Wallet.id,
+          amount: from_Transaction.amount,
+          message: from_Transaction.message,
+          time: new Date(),
+          status: "Success",
+          user: to_User,
+        });
+
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        // lets now open a new transaction:
+        await queryRunner.startTransaction();
+        try {
+          await queryRunner.manager.save(Wallet, from_Wallet);
+          await queryRunner.manager.save(Wallet,to_Wallet);
+          await queryRunner.manager.save(Transaction,from_Transaction);
+          await queryRunner.manager.save(Transaction,to_Transaction);
+        } catch (err) {
+            // since we have errors lets rollback the changes we made
+            await queryRunner.rollbackTransaction();
+            return response.status(404).json("Transaction failed");
+        }
+        finally {
+            // we need to release a queryRunner which was manually instantiated
+            await queryRunner.release();
+        }
 
         //PUSH NOTIFICATION
         fcmSend(

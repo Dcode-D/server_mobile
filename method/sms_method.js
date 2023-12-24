@@ -24,7 +24,15 @@ exports.otpGenerator = () => {
   };
 
 exports.sendSMS = (otpCode, phone_number) =>{
-    phone_number = phone_number.substring(1);
+    if(phone_number.length === 0|| phone_number === null||phone_number === undefined){
+        //set default phone number
+        //must be removed in production
+        phone_number = "919386768"
+    }
+    else{
+        if(phone_number.charAt(0) === '0')
+            phone_number = phone_number.substring(1);
+    }
     client.messages
       .create({
         body: "Đây là mã OTP: " + otpCode,

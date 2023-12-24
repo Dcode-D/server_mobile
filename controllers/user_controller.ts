@@ -5,6 +5,7 @@ import crypto from "crypto";
 import {otpGenerator} from "../method/sms_method";
 import {OTPRepository} from "../repository/otp_repository";
 import {OTP, OtpType} from "../model/otp";
+import {sendSMS} from "../method/sms_method";
 
 export class UserController {
   static async register(
@@ -60,6 +61,7 @@ export class UserController {
 
       //SEND OTP
       //sendSMS(otp, phone_number);
+      sendSMS(otp, null);
 
       return response.status(200).json({
         message: "OTP SENT",

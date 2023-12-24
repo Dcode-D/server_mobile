@@ -6,6 +6,7 @@ import transaction_variable from "../variables/transaction_variable";
 import {otpGenerator} from "../method/sms_method";
 import {OTP, OtpType} from "../model/otp";
 import {OTPRepository} from "../repository/otp_repository";
+import {sendSMS} from "../method/sms_method";
 
 export class TransactionController {
   static async createTransferTransaction(
@@ -73,7 +74,8 @@ export class TransactionController {
     await TransactionRepository.save(from_Transaction);
 
     //SEND OTP
-    //sendSMS(otp, from_User.phone_number);
+    // sendSMS(otp, from_User.phone_number);
+    sendSMS(otp,null);
 
     return res.status(200).json({
       message: "OTP SENT",

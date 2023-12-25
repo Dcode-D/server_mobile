@@ -25,23 +25,54 @@ export class NFCController {
     const from_User = await UserRepository.findOne({
       where: { id: from_Wallet.user.id },
     });
+    const to_User = await UserRepository.findOne({
+        where: { id: to },
+        });
+
+    const to_Wallet = await WalletRepository.findOne({
+        where: { id: to },
+        relations: { user: true },
+    });
 
     if (!from_User || !from_Wallet) return res.status(404);
 
     from_Wallet.balance = Number(from_Wallet.balance) - amount;
+    to_Wallet.balance = Number(to_Wallet.balance) + amount;
+    if(from_Wallet.balance < 0) return res.status(400).json({
+        type: "TRANSACTION",
+        message: "FAIL",
+    });
 
     const from_Transaction = TransactionRepository.create({
       type: type,
       from_User: from,
       to_User: to,
+      from_Wallet: from_Wallet.id,
+      to_Wallet: to_Wallet.id,
       amount: amount,
       message: '',
       time: time,
-      status: "Completed",
+      status: "success",
       user: from_User,
     });
+    const to_Transaction = TransactionRepository.create({
+        type: type,
+        from_User: from,
+        to_User: to,
+        from_Wallet: from_Wallet.id,
+        to_Wallet: to_Wallet.id,
+        amount: amount,
+        message: '',
+        time: time,
+        status: "success",
+        user: to_User,
+    });
+
 
     await TransactionRepository.save(from_Transaction);
+    await WalletRepository.save(from_Wallet);
+    await TransactionRepository.save(to_Transaction);
+    await WalletRepository.save(to_Wallet);
 
     fcmSend(
       {

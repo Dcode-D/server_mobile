@@ -182,7 +182,7 @@ export class OTPController {
         return response.status(404).json({message: "OTP is not valid type!", otp: result});
       }
     } catch (error) {
-      return response.status(404).json(error.message);
+      return response.status(404).json({message: "OTP is not valid!"});
     }
   }
 }

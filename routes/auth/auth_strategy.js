@@ -55,7 +55,7 @@ exports.JWTStrategy = new JWTStrategy(jwtOptions, async function (
   done
 ) {
   const user = await UserRepository.findOne({
-    where: { id: payload.id },
+    where: { id: payload.sub },
   });
   if (user) {
     return done(null, user);

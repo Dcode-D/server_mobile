@@ -49,6 +49,36 @@ router.post("/login", verifyLocalStrategy, async (req, res) => {
   return res.json(json);
 });
 
+router.post("/admin_login", async (req, res) => {
+  try{
+    const {username, password} = req.body;
+    if(username !== process.env.ADMIN_USERNAME || password !== process.env.ADMIN_PASSWORD){
+      return res.status(401).send("Incorrect username or password");
+    }
+    else {
+      const payload = {
+        sub: 0,
+        iat: Math.floor(Date.now() / 1000),
+        admin: true
+      }
+      const accessToken = await generateToken(payload, process.env.SECRET_KEY);
+      if (!accessToken) {
+        return res.status(500).send("Can't login right now, try again later");
+      }
+      else {
+        return res.json({
+          AUTHENTICATION_STATUS: true,
+          accessToken,
+        });
+      }
+    }
+  }
+    catch(err){
+        console.log(err);
+        return res.status(500).send("Can't login right now, try again later");
+    }
+});
+
 router.post("/register", UserController.register);
 
 router.post("/verify_otp", OTPController.verifyOTPRequest);

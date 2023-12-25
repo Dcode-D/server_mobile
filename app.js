@@ -31,13 +31,15 @@ const RunApp = async () => {
   const nfcRoute = require("./routes/api/nfc_routes");
   const vnpRoute = require("./routes/vnp");
   const paypalRoute = require("./routes/paypal");
+  const adminRoute = require("./routes/admin");
   app.get('/test_sms', (req, res) => {
     const {sendSMS} = require('./method/sms_method');
     sendSMS('123456','0919386768');
     res.status(200).json({message: 'ok'});
   })
   app.use(authRoute);
-  app.use(nfcRoute);
+  app.use('/admin',adminRoute);
+  // app.use(nfcRoute);
   app.use(vnpRoute);
   app.use(paypalRoute);
   app.use(apitRoute);

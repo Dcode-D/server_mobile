@@ -9,15 +9,15 @@ import {sendSMS} from "../method/sms_method";
 
 export class UserController {
   static async register(
-    request: Request,
-    response: Response,
-    next: NextFunction
+      request: Request,
+      response: Response,
+      next: NextFunction
   ) {
-    try{
+    try {
       //#region find user
       const phone_number = request.body.phone_number;
       const existing_user = await UserRepository.findOne({
-        where: { phone_number: phone_number, active: true },
+        where: {phone_number: phone_number, active: true},
       });
       if (existing_user) {
         return response.status(409).json({
@@ -49,7 +49,6 @@ export class UserController {
       const otp = otpGenerator();
 
 
-
       const createOTP = new OTP();
       createOTP.otp = otp;
       createOTP.created_at = new Date();
@@ -71,52 +70,57 @@ export class UserController {
           created_at: createOTP.created_at
         },
       });
-    }
-    catch(error){
+    } catch (error) {
       next(error);
     }
 
   }
 
   static async changePassword(
-    request: Request,
-    response: Response,
-    next: NextFunction
+      request: Request,
+      response: Response,
+      next: NextFunction
   ) {
-    const id = request.params.id;
-    const old_password = request.body.old_password;
-    const new_password = request.body.new_password;
-    const user = await UserRepository.findOne({
-      where: { id: id },
-    });
-    await verifyPassword(
-      old_password,
-      user.salt,
-      user.password_hash,
-      async (err, result) => {
-        if (!result) {
-          return response.status(401).json({
-            message: "Wrong password",
-          });
-        }
-        const new_hash_password = hashSync(new_password, user.salt);
-        user.password_hash = new_hash_password.toString("hex");
-        await UserRepository.save(user);
-        return response.status(200).json({
-          message: "Password changed",
-        });
-      }
-    );
+    try{
+      const id = request.params.id;
+      const old_password = request.body.old_password;
+      const new_password = request.body.new_password;
+      const user = await UserRepository.findOne({
+        where: {id: id},
+      });
+      await verifyPassword(
+          old_password,
+          user.salt,
+          user.password_hash,
+          async (err, result) => {
+            if (!result) {
+              return response.status(401).json({
+                message: "Wrong password",
+              });
+            }
+            const new_hash_password = hashSync(new_password, user.salt);
+            user.password_hash = new_hash_password.toString("hex");
+            await UserRepository.save(user);
+            return response.status(200).json({
+              message: "Password changed",
+            });
+          }
+      );
+    }
+    catch (e) {
+      return response.status(500).json({message: "Internal server error"});
+    }
+
   }
 
   static async getUser(
-    request: Request,
-    response: Response,
-    next: NextFunction
+      request: Request,
+      response: Response,
+      next: NextFunction
   ) {
     const id = request.params.id;
     const result = await UserRepository.findOne({
-      where: { id: id },
+      where: {id: id},
     });
     if (!result) return response.status(404);
     return response.status(200).json({
@@ -127,57 +131,113 @@ export class UserController {
   }
 
   static async getUserByPhoneNumber(
-    request: Request,
-    response: Response,
-    next: NextFunction
+      request: Request,
+      response: Response,
+      next: NextFunction
   ) {
-    const phone_number = request.params.phone_number;
-    const result = await UserRepository.findOne({
-      where: { phone_number: phone_number },
-      relations: {
-        wallets: true,
-      },
-    });
-    if (!result) return response.status(404);
-    return response.status(200).json({
-      id: result.id,
-      full_name: result.full_name,
-      phone_number: result.phone_number,
-      wallets: result.wallets,
-    });
+    try{
+      const phone_number = request.params.phone_number;
+      const result = await UserRepository.findOne({
+        where: {phone_number: phone_number},
+        relations: {
+          wallets: true,
+        },
+      });
+      if (!result) return response.status(404);
+      return response.status(200).json({
+        id: result.id,
+        full_name: result.full_name,
+        phone_number: result.phone_number,
+        wallets: result.wallets,
+      });
+    }
+    catch (e) {
+      return  response.status(500).json({message: e.message});
+    }
   }
 
   static async getFullUser(
-    request: Request,
-    response: Response,
-    next: NextFunction
+      request: Request,
+      response: Response,
+      next: NextFunction
   ) {
-    const id = request.params.id;
-    const result = await UserRepository.findOne({
-      where: { id: id },
-    });
-    if (!result) return response.status(404);
-    return response.status(200).json(result);
+    try{
+      const id = request.params.id;
+      const result = await UserRepository.findOne({
+        where: {id: id},
+      });
+      if (!result) return response.status(404);
+      return response.status(200).json(result);
+    }
+    catch (e) {
+      return response.status(500).json({message: e.message});
+    }
   }
 
   static async updateUser(
-    request: Request,
-    response: Response,
-    next: NextFunction
+      request: Request,
+      response: Response,
+      next: NextFunction
   ) {
-    const id = request.params.id;
-    const city = request.body.city;
-    const job = request.body.job;
-    const user = await UserRepository.findOne({
-      where: { id: id },
-    });
-    if (!user) return response.status(404);
+    try {
+      const id = request.params.id;
+      const city = request.body.city;
+      const job = request.body.job;
+      const user = await UserRepository.findOne({
+        where: {id: id},
+      });
+      if (!user) return response.status(404);
 
-    user.city = city;
-    user.job = job;
+      user.city = city;
+      user.job = job;
 
-    await UserRepository.save(user);
+      await UserRepository.save(user);
 
-    return response.status(200).json(user);
+      return response.status(200).json(user);
+    } catch (e) {
+      return response.status(500).json({message: e.message});
+    }
   }
+
+  static async getAllUsers(
+      request: Request,
+      response: Response,
+  ) {
+    try {
+      const { page } = request.params;
+      const itemsPerPage = 10;
+
+      const users = await UserRepository.find({
+        select:["id"],
+        skip: (parseInt(page) - 1) * itemsPerPage,
+        take: itemsPerPage,
+      });
+
+      return response.status(200).json(users);
+    } catch (e) {
+      return response.status(500).json({ message: e.message });
+    }
+  }
+
+    static async disableUser(
+        request: Request,
+        response: Response,
+        next: NextFunction
+    ) {
+        try {
+            const id = request.params.id;
+            const user = await UserRepository.findOne({
+                where: { id: id },
+            });
+            if (!user) return response.status(404);
+
+            user.active = false;
+
+            await UserRepository.save(user);
+
+            return response.status(200).json(user);
+        } catch (e) {
+            return response.status(500).json({ message: e.message });
+        }
+    }
 }

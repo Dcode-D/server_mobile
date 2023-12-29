@@ -166,7 +166,9 @@ export class UserController {
       const result = await UserRepository.findOne({
         where: {id: id},
       });
-      if (!result) return response.status(404);
+      console.log("reached here")
+      console.log("result: "+result)
+      if (result == null) return response.status(404).json({message: "User not found"});
       return response.status(200).json(result);
     }
     catch (e) {

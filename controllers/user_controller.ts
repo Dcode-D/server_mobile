@@ -219,7 +219,7 @@ export class UserController {
     }
   }
 
-    static async disableUser(
+    static async setUserStatusUser(
         request: Request,
         response: Response,
         next: NextFunction
@@ -229,6 +229,7 @@ export class UserController {
             const user = await UserRepository.findOne({
                 where: { id: id },
             });
+            const status = request.body.status;
             if (!user) return response.status(404);
 
             user.active = false;
@@ -240,4 +241,5 @@ export class UserController {
             return response.status(500).json({ message: e.message });
         }
     }
+
 }

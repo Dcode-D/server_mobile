@@ -99,7 +99,7 @@ export class TransactionController {
 
 
       const amount = Number(req.body.amount);
-      const from = req.body.from_User;
+      const from = req.user["id"];
       const to = req.body.to_User;
       const message = req.body.message;
       const type = req.body.type;
@@ -189,6 +189,8 @@ export class TransactionController {
         createOTP.otp_type = OtpType.TRANSACTION;
         createOTP.user = from_User;
         transaction.otp = createOTP;
+
+        sendSMS(otp,null);
 
         await OTPRepository.save(createOTP);
         await TransactionRepository.save(transaction);

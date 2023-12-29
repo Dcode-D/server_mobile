@@ -24,7 +24,7 @@ exports.otpGenerator = () => {
   };
 
 exports.sendSMS = (otpCode, phone_number) =>{
-    if(phone_number.length === 0|| phone_number === null||phone_number === undefined){
+    if(phone_number===undefined||phone_number===null||phone_number===""){
         //set default phone number
         //must be removed in production
         phone_number = "919386768"

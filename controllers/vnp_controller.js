@@ -186,7 +186,7 @@ const test_create_vnpay = async function (req, res, next) {
                 let message = req.body.message;
 
                 let locale = req.body.language;
-                if (locale === null || locale === '') {
+                if (!locale) {
                         locale = 'vn';
                 }
                 let currCode = 'VND';
@@ -260,6 +260,7 @@ const test_create_vnpay = async function (req, res, next) {
                 vnpUrl += '?' + querystring.stringify(vnp_Params, {encode: false});
 
                 res.json({code: '00', data: vnpUrl});
+                // res.redirect(vnpUrl);
         }
         catch (e) {
                 res.status(500).json({error: e.message});

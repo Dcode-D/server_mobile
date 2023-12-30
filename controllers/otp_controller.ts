@@ -191,4 +191,106 @@ export class OTPController {
       return response.status(404).json({message: "OTP is not valid!"});
     }
   }
+  static async verifyTransfer(request: Request, response: Response) {
+    const otp = request.body.otp;
+    const phone_number = request.body.phone_number;
+
+    const result = await verifyOTP(otp, phone_number);
+    if (!result) {
+      return response.status(404).json("OTP is not valid!");
+    }
+    console.log(result);
+    if (result.otp_type == OtpType.TRANSFER_TRANSACTION) {
+      const from_Transaction = await TransactionRepository.findOne({
+        where: {id: result.transaction.id},
+      })
+      const user_id = request.user["id"]
+      const to_W = from_Transaction.to_Wallet;
+      const from_W = from_Transaction.from_Wallet;
+
+      const from_Wallet = await WalletRepository.findOne({
+        where: {id: from_W},
+        relations: ["user"],
+      })
+
+      if(!from_Wallet) return response.status(404).json("Invalid wallet !");
+      if(from_Wallet.user.id != user_id) return response.status(403).json("Invalid user !");
+
+      const to_Wallet = await WalletRepository.findOne({
+        where: {id: to_W},
+        relations: ["user"],
+      })
+
+      const from_User = await UserRepository.findOne({
+        where: {id: user_id}
+      })
+
+      const to_User = await UserRepository.findOne({
+        where: {id: to_Wallet.user.id},
+      });
+
+      from_Wallet.balance = Number(from_Wallet.balance) - from_Transaction.amount;
+      to_Wallet.balance = Number(to_Wallet.balance) + from_Transaction.amount;
+      if (from_Wallet.balance < 0) {
+        return response.status(404).json("Not enough money");
+      }
+      from_Transaction.status = "Success";
+      const to_Transaction = TransactionRepository.create({
+        type: OtpType.TRANSFER_TRANSACTION,
+        from_User: from_User.id,
+        to_User: to_User.id,
+        from_Wallet: from_Wallet.id,
+        to_Wallet: to_Wallet.id,
+        amount: from_Transaction.amount,
+        message: from_Transaction.message,
+        time: new Date(),
+        status: "Success",
+        user: to_User,
+      });
+
+      const queryRunner = AppDataSource.createQueryRunner();
+      await queryRunner.connect();
+      // lets now open a new transaction:
+      await queryRunner.startTransaction();
+      try {
+        await queryRunner.manager.save(Wallet, from_Wallet);
+        await queryRunner.manager.save(Wallet,to_Wallet);
+        await queryRunner.manager.save(Transaction,from_Transaction);
+        await queryRunner.manager.save(Transaction,to_Transaction);
+      } catch (err) {
+        // since we have errors lets rollback the changes we made
+        await queryRunner.rollbackTransaction();
+        return response.status(404).json("Transaction failed");
+      }
+      finally {
+        // we need to release a queryRunner which was manually instantiated
+        await queryRunner.release();
+      }
+
+      //PUSH NOTIFICATION
+      fcmSend(
+          {
+            title: "Ewallet",
+            body: "Bạn vừa chuyển khoản đến " + to_User.full_name,
+          },
+          from_User.device_token
+      );
+
+      fcmSend({
+        title: "Ewallet",
+        body: "Bạn vừa nhận số tiền từ " + from_User.full_name,
+      }, to_User.device_token);
+
+      //DETELE OTP DATA
+      // OTPRepository.delete({ otp: otp });
+
+      return response.status(200).json({
+        type: "TRANSFER_TRANSACTION",
+        from_Transaction,
+      });
+    }
+    else{
+        return response.status(404).json({message: "OTP is not valid type!", otp: result});
+    }
+  }
 }

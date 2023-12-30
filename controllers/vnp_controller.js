@@ -231,6 +231,7 @@ const test_create_vnpay = async function (req, res, next) {
                 let vnpUrl = vnpVariables.vnp_Url;
                 let returnUrl = formatNgrokUrl("vnp_return");
                 let orderId = savedTransaction.id;
+                if(!message) message = 'Nap tien vao tai khoan tu vnpay @'+orderId;
 
                 let vnp_Params = {};
                 vnp_Params['vnp_Version'] = '2.1.0';

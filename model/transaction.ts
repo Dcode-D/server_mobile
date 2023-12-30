@@ -47,7 +47,7 @@ export class Transaction {
   @ManyToOne(()=> User, (user)=> user.transactions)
   user: User;
 
-  @OneToOne(()=> OTP, (otp)=> otp.transaction,{cascade: true})
+  @OneToOne(()=> OTP, (otp)=> otp.transaction,{cascade: true,nullable:true})
   @JoinColumn()
     otp: OTP;
 }

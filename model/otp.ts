@@ -31,6 +31,6 @@ export class OTP {
   @ManyToOne(()=>User,(user)=>null,{cascade:true})
   user: User;
 
-  @OneToOne(()=> Transaction, (transaction)=> transaction.otp)
+  @OneToOne(()=> Transaction, (transaction)=> transaction.otp,{nullable:true})
   transaction: Transaction;
 }

@@ -204,7 +204,6 @@ export class OTPController {
       const from_Transaction = await TransactionRepository.findOne({
         where: {id: result.transaction.id},
       })
-      const user_id = request.user["id"]
       const to_W = from_Transaction.to_Wallet;
       const from_W = from_Transaction.from_Wallet;
 
@@ -213,8 +212,6 @@ export class OTPController {
         relations: ["user"],
       })
 
-      if(!from_Wallet) return response.status(404).json("Invalid wallet !");
-      if(from_Wallet.user.id != user_id) return response.status(403).json("Invalid user !");
 
       const to_Wallet = await WalletRepository.findOne({
         where: {id: to_W},
@@ -222,7 +219,7 @@ export class OTPController {
       })
 
       const from_User = await UserRepository.findOne({
-        where: {id: user_id}
+        where: {id: from_Wallet.user.id}
       })
 
       const to_User = await UserRepository.findOne({

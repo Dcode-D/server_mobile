@@ -10,4 +10,6 @@ router.post("/change_password/:id", UserController.changePassword);
 
 router.put("/:id", UserController.updateUser);
 
+router.get("/validate_password/", UserController.validateUserPassword);
+
 module.exports = router;

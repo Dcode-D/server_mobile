@@ -81,7 +81,7 @@ router.post("/admin_login", async (req, res) => {
 
 router.post("/register", UserController.register);
 
-router.post("/verify_otp", OTPController.verifyOTPRequest);
+router.post("/verify_otp",verifyJWT, OTPController.verifyOTPRequest);
 
 router.get("/verify", verifyJWT, (req, res) => {
   res.status(200).json({

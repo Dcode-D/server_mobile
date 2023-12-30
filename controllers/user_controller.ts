@@ -244,4 +244,35 @@ export class UserController {
         }
     }
 
+    static  async validateUserPassword(
+        request: Request,
+        response: Response,
+        next: NextFunction){
+        try{
+            const id = request.user["id"]
+            const password = request.body.password;
+            const user = await UserRepository.findOne({
+                where: {id: id},
+            });
+            await verifyPassword(
+                password,
+                user.salt,
+                user.password_hash,
+                async (err, result) => {
+                    if (!result) {
+                        return response.status(401).json({
+                            message: "Wrong password",
+                        });
+                    }
+                    return response.status(200).json({
+                        message: "Password is correct",
+                    });
+                }
+            );
+        }
+        catch (e) {
+            return response.status(500).json({message: "Internal server error"});
+        }
+    }
+
 }

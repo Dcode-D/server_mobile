@@ -83,7 +83,7 @@ router.post("/register", UserController.register);
 
 router.post("/verify_otp", OTPController.verifyOTPRequest);
 
-router.post("/verify_transfer_otp",verifyJWT, OTPController.verifyTransfer);
+router.post("/verify_transfer_otp", OTPController.verifyTransfer);
 
 router.get("/verify", verifyJWT, (req, res) => {
   res.status(200).json({

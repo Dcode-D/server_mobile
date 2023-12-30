@@ -133,31 +133,42 @@ const vnp_controller_return = async function (req, res, next) {
                                                         await queryRunner.release();
                                                 }
 
-                                                res.status(200).json({
-                                                        RspCode: '00',
-                                                        Message: 'success',
-                                                        wallets: wallet
-                                                });
+                                                // res.status(200).json({
+                                                //         RspCode: '00',
+                                                //         Message: 'success',
+                                                //         wallets: wallet
+                                                // });
+                                                res.redirect(`payment-info/return?status=success&transactionId=${transaction.id}&message=success`);
                                         }
                                         else {
-                                                res.status(404).json({'message': 'Transaction not valid'})
+                                                // res.status(404).json({'message': 'Transaction not valid'})
+                                                let msg = encodeURIComponent('Transaction not valid');
+                                                return res.redirect(`payment-info/return?status=fail&transactionId=${transaction.id}&message=${msg}`);
                                         }
                                 }
                                 else {
-                                        res.status(404).json({'message': 'Transaction not found'})
+                                        let msg = encodeURIComponent('Transaction not found');
+                                        return res.redirect(`payment-info/return?status=fail&transactionId=${transaction.id}&message=${msg}`);
                                 }
 
                         }
                         else {
-                                res.status(501).json({RspCode: rspCode, Message: 'Fail transaction'})
+                                let msg = encodeURIComponent('Transaction failed');
+                                let tran = encodeURIComponent(orderId);
+                                return res.redirect(`payment-info/return?status=fail&transactionId=${tran}&message=${msg}`);
                         }
                 } else {
-                        res.status(501).json({RspCode: '97', Message: 'Fail checksum'})
+                        // res.status(501).json({RspCode: '97', Message: 'Fail checksum'})
+                        let msg = encodeURIComponent('Fail checksum');
+                        return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=${msg}`);
                 }
         }
         catch (e) {
-                res.status(403).json({RspCode: '99', Message: 'Fail transaction'})
+                // res.status(403).json({RspCode: '99', Message: 'Fail transaction'})
+                let msg = encodeURIComponent('Fail transaction');
+                return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=${msg}`);
         }
+
 }
 
 function sortObject(obj) {

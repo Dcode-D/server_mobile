@@ -112,29 +112,30 @@ const paypalSuccess = async (req, res) => {
         await paypalSdk.payment.execute(paymentId, payerId, async function (error, paypalPayment) {
             if (error) {
                 console.error(error);
-                res.send(error);
+                res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
                 throw error;
             } else {
-                if(!paypalPayment) return res.status(500).json({error: 'Payment not found'});
+                if(!paypalPayment) return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
                 const paypalTransaction = paypalPayment.transactions;
-                if(!paypalTransaction) return res.status(500).json({error: 'Transaction not found'});
+                if(!paypalTransaction) return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
                 const transactionId = paypalTransaction[0].item_list.items[0].name;
                 const transaction = await TransactionRepository.findOne({
                     where: { id: transactionId },
                 })
-                if(!transaction) return res.status(500).json({error: 'Transaction not found'});
-                if(transaction.status !== 'Pending') return res.status(500).json({error: 'Transaction is not pending'});
+                if(!transaction) return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
+                let msg = encodeURIComponent("Invalid transaction!")
+                if(transaction.status !== 'Pending') return res.redirect(`payment-info/return?status=fail&transactionId=${transaction.id}&message=${msg}`)
+                const to_Wallet = await WalletRepository.findOne({
+                    where: { id: transaction.to_Wallet },
+                    relations: { user: true },
+                });
+                if (!to_Wallet) return res.status(404);
                 const queryRunner = AppDataSource.createQueryRunner();
                 await queryRunner.connect();
                 // lets now open a new transaction:
                 await queryRunner.startTransaction();
                 //handle transaction on wallets
                 try {
-                    const to_Wallet = await WalletRepository.findOne({
-                        where: { id: transaction.to_Wallet },
-                        relations: { user: true },
-                    });
-                    if (!to_Wallet) return res.status(404);
                     const to_User = await UserRepository.findOne({
                         where: { id: to_Wallet.user.id },
                     });
@@ -145,14 +146,18 @@ const paypalSuccess = async (req, res) => {
                     await queryRunner.manager.save(to_Wallet);
                     await queryRunner.manager.save(transaction);
                     await queryRunner.commitTransaction();
-                    return res.status(200).json({message: 'Success',wallet: to_Wallet});
+
                 }catch (e) {
                     await queryRunner.rollbackTransaction();
-                    return res.status(501).json({'message': 'Fail transaction'})
+                    transaction.status = 'Fail';
+                    await queryRunner.manager.save(transaction);
+                    res.redirect(`payment-info/return?status=fail&transactionId=${transaction.id}&message=Fail`)
                 }
                 finally {
                     await queryRunner.release();
                 }
+                // return res.status(200).json({message: 'Success',wallet: to_Wallet});
+                res.redirect(`payment-info/return?status=success&transactionId=${transaction.id}&message=Success`)
             }
         });
 
@@ -166,7 +171,27 @@ const paypalSuccess = async (req, res) => {
 
 const paypalCancel = async (req, res) => {
     //TODO: Handle cancel on client side
-    res.send('Cancelled');
+    const paymentId = req.query.paymentId;
+    const payerId = { "payer_id": req.query.PayerID };
+    await paypalSdk.payment.execute(paymentId, payerId, async function (error, paypalPayment) {
+        if (error) {
+            console.error(error);
+            res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
+            throw error;
+        } else {
+            if (!paypalPayment) return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
+            const paypalTransaction = paypalPayment.transactions;
+            if (!paypalTransaction) return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
+            const transactionId = paypalTransaction[0].item_list.items[0].name;
+            const transaction = await TransactionRepository.findOne({
+                where: {id: transactionId},
+            })
+            if(!transaction) return res.redirect(`payment-info/return?status=fail&transactionId=Unknown&message=Fail`)
+            transaction.status = 'Cancel';
+            await TransactionRepository.save(transaction);
+            res.redirect(`payment-info/return?status=fail&transactionId=${transaction.id}&message=Cancel`)
+        }
+    });
 }
 
 const paypalPayout = async (req, res) => {

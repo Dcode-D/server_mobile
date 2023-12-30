@@ -234,7 +234,7 @@ export class UserController {
             const status = request.body.status;
             if (!user) return response.status(404);
 
-            user.active = false;
+            user.active = status;
 
             await UserRepository.save(user);
 

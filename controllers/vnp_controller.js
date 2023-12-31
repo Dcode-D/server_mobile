@@ -98,7 +98,7 @@ const vnp_controller_return = async function (req, res, next) {
                         var orderId = vnp_Params['vnp_TxnRef'];
                         var rspCode = vnp_Params['vnp_ResponseCode'];
                         if(rspCode === '00'){
-                                //TODO: redirect client to success page
+
                                 const transaction = await TransactionRepository.findOne({
                                         where: {id: orderId}
                                 });
@@ -127,6 +127,8 @@ const vnp_controller_return = async function (req, res, next) {
                                                 } catch (e) {
                                                         // since we have errors lets rollback changes we made
                                                         await queryRunner.rollbackTransaction();
+                                                        transaction.status = 'Fail';
+                                                        await queryRunner.manager.save(transaction);
                                                         return res.status(501).json({'message': 'Fail transaction'})
                                                 } finally {
                                                         // you need to release query runner which is manually created:

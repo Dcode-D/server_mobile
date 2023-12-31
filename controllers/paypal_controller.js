@@ -106,7 +106,6 @@ const paypalDeposit = async (req, res) => {
 
 const paypalSuccess = async (req, res) => {
     try{
-        //TODO: Handle success on client side
         const paymentId = req.query.paymentId;
         const payerId = { "payer_id": req.query.PayerID };
         await paypalSdk.payment.execute(paymentId, payerId, async function (error, paypalPayment) {

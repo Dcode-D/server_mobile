@@ -6,6 +6,7 @@ import {otpGenerator} from "../method/sms_method";
 import {OTPRepository} from "../repository/otp_repository";
 import {OTP, OtpType} from "../model/otp";
 import {sendSMS} from "../method/sms_method";
+import {FindManyOptions, Like} from "typeorm";
 
 export class UserController {
   static async register(
@@ -17,7 +18,7 @@ export class UserController {
       //#region find user
       const phone_number = request.body.phone_number;
       const existing_user = await UserRepository.findOne({
-        where: {phone_number: phone_number, active: true},
+        where: {phone_number: phone_number},
       });
       if (existing_user) {
         return response.status(409).json({
@@ -201,25 +202,52 @@ export class UserController {
     }
   }
 
-  static async getAllUsers(
-      request: Request,
-      response: Response,
-  ) {
-    try {
-      const { page } = request.params;
-      const itemsPerPage = 10;
+    static async getAllUsers(request: Request, response: Response) {
+        try {
+            const { page, name, id, phone } = request.params;
+            const itemsPerPage = 10;
 
-      const users = await UserRepository.find({
-        select:["id"],
-        skip: (parseInt(page) - 1) * itemsPerPage,
-        take: itemsPerPage,
-      });
+            const query: FindManyOptions = {
+                select: ["id"],
+                skip: (parseInt(page) - 1) * itemsPerPage,
+                take: itemsPerPage,
+                where: {},
+            };
 
-      return response.status(200).json(users);
-    } catch (e) {
-      return response.status(500).json({ message: e.message });
+            if (name) {
+                query.where = {
+                    ...query.where,
+                    full_name: Like(`%${name}%`),
+                };
+            }
+
+            // Add more conditions using OR operator if needed
+            // Example:
+            if (phone) {
+              query.where = {
+                ...query.where,
+                OR: [
+                  { phone: Like(`%${phone}%`) },
+                  // Add more conditions here
+                ],
+              };
+            }
+
+            if (id) {
+                query.where = {
+                    ...query.where,
+                    id: id,
+                };
+            }
+
+            const users = await UserRepository.find(query);
+
+            return response.status(200).json(users);
+        } catch (e) {
+            return response.status(500).json({ message: e.message });
+        }
     }
-  }
+
 
     static async setUserStatusUser(
         request: Request,

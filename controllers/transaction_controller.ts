@@ -1,13 +1,13 @@
-import {NextFunction, Request, Response} from "express";
-import {TransactionRepository} from "../repository/transaction_repository";
-import {UserRepository} from "../repository/user_repository";
-import {WalletRepository} from "../repository/wallet_repository";
+import { NextFunction, Request, Response } from "express";
+import { TransactionRepository } from "../repository/transaction_repository";
+import { UserRepository } from "../repository/user_repository";
+import { WalletRepository } from "../repository/wallet_repository";
 import transaction_variable from "../variables/transaction_variable";
-import {otpGenerator} from "../method/sms_method";
-import {OTP, OtpType} from "../model/otp";
-import {OTPRepository} from "../repository/otp_repository";
-import {sendSMS} from "../method/sms_method";
-import {Between, ILike} from "typeorm";
+import { otpGenerator } from "../method/sms_method";
+import { OTP, OtpType } from "../model/otp";
+import { OTPRepository } from "../repository/otp_repository";
+import { sendSMS } from "../method/sms_method";
+import { Between, ILike } from "typeorm";
 
 export class TransactionController {
   static async createTransferTransaction(
@@ -15,7 +15,7 @@ export class TransactionController {
     res: Response,
     next: NextFunction
   ) {
-    try{
+    try {
       const amount = Number(req.body.amount);
       const from = req.body.from_User;
       const to = req.body.to_User;
@@ -43,8 +43,15 @@ export class TransactionController {
       });
       //#region
 
-      if (!from_User || !to_User || !from_Wallet || !to_Wallet || from_User.active === false || to_User.active === false)
-        return res.status(404).json({"message":"Invalid transaction!"});
+      if (
+        !from_User ||
+        !to_User ||
+        !from_Wallet ||
+        !to_Wallet ||
+        from_User.active === false ||
+        to_User.active === false
+      )
+        return res.status(404).json({ message: "Invalid transaction!" });
 
       const from_Transaction = TransactionRepository.create({
         type: "TRANSFER",
@@ -63,13 +70,12 @@ export class TransactionController {
 
       const otp = otpGenerator();
 
-
       const createOTP = new OTP();
       createOTP.otp = otp;
       createOTP.created_at = new Date();
       createOTP.transaction = from_Transaction;
       createOTP.otp_type = OtpType.TRANSFER_TRANSACTION;
-      createOTP.user= from_User;
+      createOTP.user = from_User;
       from_Transaction.otp = createOTP;
 
       await OTPRepository.save(createOTP);
@@ -77,17 +83,17 @@ export class TransactionController {
 
       //SEND OTP
       // sendSMS(otp, from_User.phone_number);
-      sendSMS(otp,null);
+      sendSMS(otp, null);
 
       return res.status(200).json({
         message: "OTP SENT",
         otp_data: otp,
       });
+    } catch (e) {
+      return res
+        .status(500)
+        .json({ message: "There was an error, please try again" });
     }
-    catch (e) {
-      return  res.status(500).json({"message":"There was an error, please try again"});
-    }
-
   }
 
   static async createTransaction(
@@ -96,8 +102,6 @@ export class TransactionController {
     next: NextFunction
   ) {
     try {
-
-
       const amount = Number(req.body.amount);
       const from = req.user["id"];
       const to = req.body.to_User;
@@ -154,16 +158,15 @@ export class TransactionController {
       } else if (transaction_variable.transfer_Type.includes(type)) {
         //#region find user's wallet
         const from_Wallet = await WalletRepository.findOne({
-          where: {id: from},
-          relations: {user: true},
+          where: { id: from },
+          relations: { user: true },
         });
 
         if (!from_Wallet) return res.status(404);
 
         const from_User = await UserRepository.findOne({
-          where: {id: from_Wallet.user.id},
+          where: { id: from_Wallet.user.id },
         });
-
 
         const transaction = TransactionRepository.create({
           type: type,
@@ -182,7 +185,6 @@ export class TransactionController {
 
         const otp = otpGenerator();
 
-
         const createOTP = new OTP();
         createOTP.otp = otp;
         createOTP.created_at = new Date();
@@ -190,7 +192,7 @@ export class TransactionController {
         createOTP.user = from_User;
         transaction.otp = createOTP;
 
-        sendSMS(otp,null);
+        sendSMS(otp, null);
 
         await OTPRepository.save(createOTP);
         await TransactionRepository.save(transaction);
@@ -198,18 +200,18 @@ export class TransactionController {
         //SEND OTP
         //sendSMS(otp, from_User.phone_number);
 
-        return res.status(200).json({message: "OTP SENT", otp_data: otp});
+        return res.status(200).json({ message: "OTP SENT", otp_data: otp });
       }
     } catch (e) {
-      return res.status(404).json({message: e.message});
+      return res.status(404).json({ message: e.message });
     }
   }
 
   //the query from and to can be used to filter the transaction
   static async getTransactions(
-      req: Request,
-      res: Response,
-      next: NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
   ) {
     try {
       const id = req.params.user_id;
@@ -227,10 +229,10 @@ export class TransactionController {
       if (!user) return res.status(404).json("Can not find user");
       //check uer permission to view transaction
       if (
-          (req["admin"] == null ||
-              req["admin"] == undefined ||
-              req["admin"] == false) &&
-          user.id != req.user["id"]
+        (req["admin"] == null ||
+          req["admin"] == undefined ||
+          req["admin"] == false) &&
+        user.id != req.user["id"]
       )
         return res.status(401).json("Unauthorized");
       //initialize where condition
@@ -269,4 +271,19 @@ export class TransactionController {
     }
   }
 
+  static async getSingleTransaction(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const id = req.params.id;
+      const transactions = await TransactionRepository.findOne({
+        where: { id: id },
+      });
+      return res.status(200).json(transactions);
+    } catch (e) {
+      return res.status(503).json({ message: e.message });
+    }
+  }
 }

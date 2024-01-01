@@ -7,7 +7,7 @@ import {otpGenerator} from "../method/sms_method";
 import {OTP, OtpType} from "../model/otp";
 import {OTPRepository} from "../repository/otp_repository";
 import {sendSMS} from "../method/sms_method";
-import {Between} from "typeorm";
+import {Between, ILike} from "typeorm";
 
 export class TransactionController {
   static async createTransferTransaction(
@@ -211,10 +211,12 @@ export class TransactionController {
       res: Response,
       next: NextFunction
   ) {
-    try{
+    try {
       const id = req.params.user_id;
       let from = req.query.from;
       let to = req.query.to;
+      let type = req.query.type;
+      let status = req.query.status;
 
       const user = await UserRepository.findOne({
         where: {
@@ -223,13 +225,19 @@ export class TransactionController {
       });
 
       if (!user) return res.status(404).json("Can not find user");
-      if ((req["admin"]==null||req['admin']==undefined||req['admin']==false)&&user.id != req.user['id'])
+      //check uer permission to view transaction
+      if (
+          (req["admin"] == null ||
+              req["admin"] == undefined ||
+              req["admin"] == false) &&
+          user.id != req.user["id"]
+      )
         return res.status(401).json("Unauthorized");
+      //initialize where condition
 
       let whereCondition: any = { user: user.id };
-
+      //date filter
       if (from && to) {
-        //not tested
         const fromDate = new Date(from as string);
         const toDate = new Date(to as string);
 
@@ -239,15 +247,26 @@ export class TransactionController {
 
         whereCondition.time = Between(fromDate, toDate);
       }
-
+      //type filter
+      if (type) {
+        // Convert both type and transaction types to lowercase for case-insensitive comparison
+        whereCondition.type = ILike(`%${type}%`);
+      }
+      //status filter
+      if (status) {
+        // Convert both type and transaction types to lowercase for case-insensitive comparison
+        whereCondition.status = ILike(`%${status}%`);
+      }
+      //find transactions with the where condition
       const transactions = await TransactionRepository.find({
         where: whereCondition,
       });
-
+      //return transactions
       return res.status(200).json(transactions);
-    }
-    catch (e) {
-        return res.status(503).json({message: e.message});
+    } catch (e) {
+      //return error
+      return res.status(503).json({ message: e.message });
     }
   }
+
 }

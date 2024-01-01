@@ -210,7 +210,11 @@ const paypalPayout = async (req, res) => {
             if (!transaction||transaction.status!=='Pending') return res.status(404).json("Invalid transaction !");
             if (!wallet) return res.status(404).json("Invalid wallet !");
             const withWallet = await WalletRepository.findOne({where: {id: wallet}});
-            if (withWallet.balance < transaction.amount) return response.status(404).json("Not enough money !");
+            if (withWallet.balance < transaction.amount){
+                transaction.status = 'Fail';
+                await TransactionRepository.save(transaction);
+                return res.status(404).json("Not enough money !");
+            }
             const rate = 24000;
             const usdamt = (Math.round(transaction.amount / rate * 100) / 100).toFixed(2);
             var sender_batch_id = Math.random().toString(36).substring(9);
@@ -239,7 +243,9 @@ const paypalPayout = async (req, res) => {
                     if(payout.httpStatusCode!==201) return res.status(404).json("Fail transaction");
                     paypalSdk.payout.get(payout.batch_header.payout_batch_id, async function (error, payout) {
                        if(error){
-                            return res.status(404).json(error);
+                           transaction.status = 'Fail';
+                            await TransactionRepository.save(transaction);
+                            return res.status(503).json(error);
                        }
                        else {
                            const queryRunner = AppDataSource.createQueryRunner();

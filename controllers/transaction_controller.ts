@@ -214,10 +214,10 @@ export class TransactionController {
   static async getTransactions(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.user_id;
-      const from = req.body.from;
-      const to = req.body.to;
-      const type = req.body.type;
-      const status = req.body.status;
+      const from = req.query.from;
+      const to = req.query.to;
+      const type = req.query.type;
+      const status = req.query.status;
 
       console.log("required id " +id)
       const user = await UserRepository.findOne({

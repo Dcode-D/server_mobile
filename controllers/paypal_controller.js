@@ -42,7 +42,7 @@ const paypalDeposit = async (req, res) => {
 
         const transaction = TransactionRepository.create({
             type: "DEPOSIT",
-            from_User: to,
+            from_User: "Paypal",
             to_User: to,
             from_Wallet: to_Wallet.id,
             to_Wallet: to_Wallet.id,

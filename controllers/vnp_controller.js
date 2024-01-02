@@ -222,7 +222,7 @@ const test_create_vnpay = async function (req, res, next) {
 
                 const transaction = TransactionRepository.create({
                         type: "DEPOSIT",
-                        from_User: to,
+                        from_User: "VNPAY",
                         to_User: to,
                         from_Wallet: to_Wallet.id,
                         to_Wallet: to_Wallet.id,

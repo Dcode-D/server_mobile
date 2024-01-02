@@ -230,19 +230,21 @@ export class TransactionController {
 
       // Check user permission to view transactions
       if (
-          (!req.admin || req.admin === false) &&
-          user.id !== req.user?.id
+          (!req["admin"] || req["admin"] === false) &&
+          (!req.user || req.user["id"].toString() !== user.id.toString())
       ) {
         return res.status(401).json("Unauthorized");
       }
+
+
 
       // Initialize where condition
       let whereCondition: any = { user: { id: id } };
 
       // Date filter
       if (from && to) {
-        const fromDate = new Date(from);
-        const toDate = new Date(to);
+        const fromDate = new Date(from.toString());
+        const toDate = new Date(to.toString());
 
         if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
           return res.status(400).json("Invalid date format");
@@ -273,6 +275,7 @@ export class TransactionController {
       return res.status(503).json({ message: e.message });
     }
   }
+
 
   static async getSingleTransaction(
     req: Request,

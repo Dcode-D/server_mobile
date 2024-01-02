@@ -34,12 +34,12 @@ const RunApp = async () => {
   const adminRoute = require("./routes/admin");
   app.get('/test_sms', (req, res) => {
     const {sendSMS} = require('./method/sms_method');
-    sendSMS('123456','0919386768');
+    sendSMS('123456',"0919386768");
     res.status(200).json({message: 'ok'});
   })
   app.use(authRoute);
   app.use('/admin',adminRoute);
-  // app.use(nfcRoute);
+  app.use(nfcRoute);
   app.use(vnpRoute);
   app.use(paypalRoute);
   app.use(apitRoute);

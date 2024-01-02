@@ -23,6 +23,8 @@ export class TransactionController {
       const fcmToken = req.body.fcm_token;
       const time = new Date();
 
+      if(req.user["id"] !== from) return res.status(404).json({"message":"Invalid transaction!"});
+
       //#region find user's wallet
       const from_Wallet = await WalletRepository.findOne({
         where: { id: from },
@@ -156,17 +158,18 @@ export class TransactionController {
         //
         // return res.status(200).json({ message: "OTP SENT", otp: otp });
       } else if (transaction_variable.transfer_Type.includes(type)) {
+        const from_User = await UserRepository.findOne({
+          where: { id: from },
+        });
         //#region find user's wallet
         const from_Wallet = await WalletRepository.findOne({
-          where: { id: from },
-          relations: { user: true },
+          where: { user: {id:from_User.id} },
         });
+        if(!from_User||!from_User.active) return res.status(404).json({ message: "Invalid transaction!" });
 
-        if (!from_Wallet) return res.status(404);
+        if (!from_Wallet) return res.status(404).json({ message: "Invalid wallet!" });
 
-        const from_User = await UserRepository.findOne({
-          where: { id: from_Wallet.user.id },
-        });
+
 
         const transaction = TransactionRepository.create({
           type: type,

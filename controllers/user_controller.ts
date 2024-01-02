@@ -204,40 +204,40 @@ export class UserController {
 
     static async getAllUsers(request: Request, response: Response) {
         try {
-            const { page, name, id, phone } = request.params;
-            const itemsPerPage = 10;
+            const { page} = request.params;
+            const { name, phone, id } = request.query;
+            const itemsPerPage = 5;
 
             const query: FindManyOptions = {
                 select: ["id"],
                 skip: (parseInt(page) - 1) * itemsPerPage,
                 take: itemsPerPage,
-                where: {},
+                where: [],
             };
 
             if (name) {
-                query.where = {
-                    ...query.where,
-                    full_name: Like(`%${name}%`),
-                };
+                query.where = [
+                    ...query.where.values(),
+                    { full_name: Like(`%${name}%`) },
+                ];
+
             }
+
 
             // Add more conditions using OR operator if needed
             // Example:
             if (phone) {
-              query.where = {
-                ...query.where,
-                OR: [
-                  { phone: Like(`%${phone}%`) },
-                  // Add more conditions here
-                ],
-              };
+                query.where = [
+                    ...query.where.values(),
+                    {phone_number: Like(`%${phone}%`)},
+                ]
             }
 
+
             if (id) {
-                query.where = {
-                    ...query.where,
-                    id: id,
-                };
+                query.where= [
+                    ...query.where.values(),
+                    { id: id },]
             }
 
             const users = await UserRepository.find(query);
@@ -262,9 +262,10 @@ export class UserController {
             const status = request.body.status;
             if (!user) return response.status(404);
 
-            user.active = status;
+            user.active = status == 'true';
 
             await UserRepository.save(user);
+            console.log(user);
 
             return response.status(200).json(user);
         } catch (e) {

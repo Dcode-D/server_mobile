@@ -17,6 +17,10 @@ export class NFCController {
     const type = req.body.type;
     const time = new Date();
 
+    if(from!==req.user["id"]) return res.status(400).json({
+        message: "invalid transaction"
+    });
+
     const from_Wallet = await WalletRepository.findOne({
       where: { id: from },
       relations: { user: true },

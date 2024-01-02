@@ -28,14 +28,15 @@ const paypalDeposit = async (req, res) => {
         const to = req.user.id;
         if(!to) return res.status(401).json({message: 'Unauthorized'});
 
-        const to_Wallet = await WalletRepository.findOne({
+        const to_User = await UserRepository.findOne({
             where: { id: to },
-            relations: { user: true },
+        });
+        const to_Wallet = await WalletRepository.findOne({
+            where: { user: to_User.id },
         });
 
-        const to_User = await UserRepository.findOne({
-            where: { id: to_Wallet.user.id },
-        });
+
+        if(!to_User||!to_User.active) return res.status(404).json({message: 'User not valid!'});
 
         if (!to_Wallet) return res.status(404);
 
@@ -203,6 +204,10 @@ const paypalPayout = async (req, res) => {
         const result = await verifyOTP(otp, phone_number);
         if (!result) {
             return res.status(404).json("OTP is not valid!");
+        }
+        const user = await UserRepository.findOne({where: {id: result.user.id}});
+        if (!user||!user.active) {
+            return res.status(404).json("Invalid user!");
         }
         if (result.otp_type == OtpType.TRANSACTION) {
             const wallet = result.transaction.to_Wallet ? result.transaction.to_Wallet : result.transaction.from_Wallet;

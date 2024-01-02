@@ -205,17 +205,20 @@ const test_create_vnpay = async function (req, res, next) {
                 let currCode = 'VND';
                 const to = req.user.id;
                 if(!to) return res.status(401).json({message: 'Unauthorized'});
+                const to_User = await UserRepository.findOne({
+                        where: { id: to },
+                });
+                if(!to_User||!to_User.active)
+                        return res.status(401).json({message: 'Unauthorized'});
 
                 const to_Wallet = await WalletRepository.findOne({
-                        where: { id: to },
+                        where: { user: to_User.id },
                         relations: { user: true },
                 });
 
-                const to_User = await UserRepository.findOne({
-                        where: { id: to_Wallet.user.id },
-                });
 
-                if (!to_Wallet) return res.status(404);
+
+                if (!to_Wallet) return res.status(404).json({ message: 'Wallet not found' });
 
                 const transaction = TransactionRepository.create({
                         type: "DEPOSIT",

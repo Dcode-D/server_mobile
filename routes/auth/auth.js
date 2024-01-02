@@ -27,9 +27,9 @@ router.post("/login", verifyLocalStrategy, async (req, res) => {
   if (!user) {
     return res.status(401).send("Incorrect username or password");
   }
-  if(user.active === false){
-    return res.status(401).send("Your account is not active");
-  }
+  // if(user.active === false){
+  //   return res.status(401).send("Your account is not active");
+  // }
   const payload = {
     sub: user.id,
     iat: Math.floor(Date.now() / 1000),

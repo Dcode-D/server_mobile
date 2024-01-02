@@ -18,7 +18,7 @@ exports.localStrategy = new LocalStrategy(
   async function verify(username, password, callback) {
     const phone_number = username;
     const user = await UserRepository.findOne({
-      where: { phone_number: phone_number },
+      where: { phone_number: phone_number, active: true },
       relations: {
         wallets: true,
       },

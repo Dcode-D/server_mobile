@@ -23,8 +23,8 @@ export class TransactionController {
       const fcmToken = req.body.fcm_token;
       const time = new Date();
 
-      if(req.user["id"] !== from) return res.status(404).json({"message":"Invalid transaction!"});
-
+      if (req.user["id"].toString() !== from)
+        return res.status(404).json({ message: "Invalid transaction!" });
       //#region find user's wallet
       const from_Wallet = await WalletRepository.findOne({
         where: { id: from },
@@ -163,13 +163,13 @@ export class TransactionController {
         });
         //#region find user's wallet
         const from_Wallet = await WalletRepository.findOne({
-          where: { user: {id:from_User.id} },
+          where: { user: { id: from_User.id } },
         });
-        if(!from_User||!from_User.active) return res.status(404).json({ message: "Invalid transaction!" });
+        if (!from_User || !from_User.active)
+          return res.status(404).json({ message: "Invalid transaction!" });
 
-        if (!from_Wallet) return res.status(404).json({ message: "Invalid wallet!" });
-
-
+        if (!from_Wallet)
+          return res.status(404).json({ message: "Invalid wallet!" });
 
         const transaction = TransactionRepository.create({
           type: type,
@@ -211,7 +211,11 @@ export class TransactionController {
   }
 
   //the query from and to can be used to filter the transaction
-  static async getTransactions(req: Request, res: Response, next: NextFunction) {
+  static async getTransactions(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const id = req.params.user_id;
       const from = req.query.from;
@@ -219,7 +223,7 @@ export class TransactionController {
       const type = req.query.type;
       const status = req.query.status;
 
-      console.log("required id " +id)
+      console.log("required id " + id);
       const user = await UserRepository.findOne({
         where: {
           id: id,

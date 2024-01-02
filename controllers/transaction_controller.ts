@@ -211,18 +211,15 @@ export class TransactionController {
   }
 
   //the query from and to can be used to filter the transaction
-  static async getTransactions(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  static async getTransactions(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.user_id;
-      let from = req.query.from;
-      let to = req.query.to;
-      let type = req.query.type;
-      let status = req.query.status;
+      const from = req.body.from;
+      const to = req.body.to;
+      const type = req.body.type;
+      const status = req.body.status;
 
+      console.log("required id " +id)
       const user = await UserRepository.findOne({
         where: {
           id: id,
@@ -230,21 +227,22 @@ export class TransactionController {
       });
 
       if (!user) return res.status(404).json("Can not find user");
-      //check uer permission to view transaction
-      if (
-        (req["admin"] == null ||
-          req["admin"] == undefined ||
-          req["admin"] == false) &&
-        user.id != req.user["id"]
-      )
-        return res.status(401).json("Unauthorized");
-      //initialize where condition
 
-      let whereCondition: any = { user: user.id };
-      //date filter
+      // Check user permission to view transactions
+      if (
+          (!req.admin || req.admin === false) &&
+          user.id !== req.user?.id
+      ) {
+        return res.status(401).json("Unauthorized");
+      }
+
+      // Initialize where condition
+      let whereCondition: any = { user: { id: id } };
+
+      // Date filter
       if (from && to) {
-        const fromDate = new Date(from as string);
-        const toDate = new Date(to as string);
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
 
         if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
           return res.status(400).json("Invalid date format");
@@ -252,24 +250,26 @@ export class TransactionController {
 
         whereCondition.time = Between(fromDate, toDate);
       }
-      //type filter
+
+      // Type filter
       if (type) {
-        // Convert both type and transaction types to lowercase for case-insensitive comparison
         whereCondition.type = ILike(`%${type}%`);
       }
-      //status filter
+
+      // Status filter
       if (status) {
-        // Convert both type and transaction types to lowercase for case-insensitive comparison
         whereCondition.status = ILike(`%${status}%`);
       }
-      //find transactions with the where condition
+
+      // Find transactions with the where condition
       const transactions = await TransactionRepository.find({
         where: whereCondition,
       });
-      //return transactions
+
+      // Return transactions
       return res.status(200).json(transactions);
     } catch (e) {
-      //return error
+      // Return error
       return res.status(503).json({ message: e.message });
     }
   }

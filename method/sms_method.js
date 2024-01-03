@@ -56,7 +56,7 @@ exports.sendSMS = (otpCode, phone_number) =>{
         client.messages
             .create({
                 body: otpCode,
-                from: "whatsapp:+18179694239",
+                from: "whatsapp:+14155238886",
                 to: "whatsapp:+84" + phone_number,
             })
             .then((message) => console.log(message.sid))

@@ -196,7 +196,6 @@ const paypalCancel = async (req, res) => {
 
 const paypalPayout = async (req, res) => {
     try {
-
         const otp = req.body.otp;
         const phone_number = req.body.phone_number;
         const email = req.body.email;
@@ -210,7 +209,7 @@ const paypalPayout = async (req, res) => {
             return res.status(404).json("Invalid user!");
         }
         if (result.otp_type == OtpType.TRANSACTION) {
-            const wallet = result.transaction.to_Wallet ? result.transaction.to_Wallet : result.transaction.from_Wallet;
+            const wallet = result.transaction.from_Wallet;
             const transaction = result.transaction;
             if (!transaction||transaction.status!=='Pending') return res.status(404).json("Invalid transaction !");
             if (!wallet) return res.status(404).json("Invalid wallet !");

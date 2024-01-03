@@ -170,13 +170,12 @@ export class TransactionController {
         if (!from_Wallet) return res.status(404).json({ message: "Invalid wallet!" });
 
 
-
         const transaction = TransactionRepository.create({
           type: type,
           from_User: from_User.id,
-          to_User: from_User.id,
+          to_User: to?to:"Paypal",
           from_Wallet: from_Wallet.id,
-          to_Wallet: from_Wallet.id,
+          to_Wallet: to?to:"Paypal",
           amount: amount,
           message: message,
           time: time,

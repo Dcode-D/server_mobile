@@ -23,8 +23,8 @@ export class TransactionController {
       const fcmToken = req.body.fcm_token;
       const time = new Date();
 
-      if(req.user["id"] !== from) return res.status(404).json({"message":"Invalid transaction!"});
-
+      if (req.user["id"].toString() !== from)
+        return res.status(404).json({ message: "Invalid transaction!" });
       //#region find user's wallet
       const from_Wallet = await WalletRepository.findOne({
         where: { id: from },
@@ -170,12 +170,13 @@ export class TransactionController {
         if (!from_Wallet) return res.status(404).json({ message: "Invalid wallet!" });
 
 
+
         const transaction = TransactionRepository.create({
           type: type,
           from_User: from_User.id,
-          to_User: to?to:"Paypal",
+          to_User: from_User.id,
           from_Wallet: from_Wallet.id,
-          to_Wallet: to?to:"Paypal",
+          to_Wallet: from_Wallet.id,
           amount: amount,
           message: message,
           time: time,

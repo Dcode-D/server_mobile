@@ -17,7 +17,7 @@ export class NFCController {
     const type = req.body.type;
     const time = new Date();
 
-    if(from!==req.user["id"]) return res.status(400).json({
+    if(from!==req.user["id"].toString()) return res.status(400).json({
         message: "invalid transaction"
     });
 

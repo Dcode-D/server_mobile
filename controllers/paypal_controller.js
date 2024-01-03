@@ -263,7 +263,7 @@ const paypalPayout = async (req, res) => {
                                await queryRunner.manager.save(withWallet);
                                await queryRunner.manager.save(transaction);
                                await queryRunner.commitTransaction();
-                               return res.status(200).json({message: 'Success',wallet: withWallet, payout: payout});
+                               return res.status(200).json({message: 'Success',wallet: withWallet, payout: payout, transaction: transaction});
                            }catch (e) {
                                await queryRunner.rollbackTransaction();
                                return res.status(501).json({'message': 'Fail transaction'})

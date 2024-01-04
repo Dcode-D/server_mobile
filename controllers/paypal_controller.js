@@ -32,7 +32,7 @@ const paypalDeposit = async (req, res) => {
             where: { id: to },
         });
         const to_Wallet = await WalletRepository.findOne({
-            where: { user: to_User.id },
+            where: { user: {id:to_User.id} },
         });
 
 
@@ -142,8 +142,10 @@ const paypalSuccess = async (req, res) => {
                     if (!to_User) return res.status(404);
                     const amount = transaction.amount;
                     to_Wallet.balance = to_Wallet.balance + amount;
+                    console.log(to_Wallet.balance);
+                    console.log(to_Wallet.id);
                     transaction.status = 'Success';
-                    await queryRunner.manager.save(to_Wallet);
+                    await WalletRepository.save(to_Wallet);
                     await queryRunner.manager.save(transaction);
                     await queryRunner.commitTransaction();
 

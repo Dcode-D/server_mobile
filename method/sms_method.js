@@ -37,7 +37,7 @@ exports.sendSMS = (otpCode, phone_number) =>{
     }
     // twilio_method(otpCode, phone_number)
     // speedSMS_method(otpCode, phone_number)
-    twilio_method_whatsapp(otpCode, phone_number)
+    twilio_method(otpCode, phone_number)
   }
 
   const twilio_method = (otpCode, phone_number) => {

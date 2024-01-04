@@ -212,7 +212,7 @@ const test_create_vnpay = async function (req, res, next) {
                         return res.status(401).json({message: 'Unauthorized'});
 
                 const to_Wallet = await WalletRepository.findOne({
-                        where: { user: to_User.id },
+                        where: { user: {id:to_User.id} },
                         relations: { user: true },
                 });
 
